@@ -72,6 +72,13 @@ public class HomeController : Controller
 } 
 ```
 
+##### Validating your API token
+To check if your access token is valid and authenticated:
+```csharp
+// List access token info
+await client.WhoAmIAsync();
+```
+
 ##### Feed Items
 To create a feed item:
 ```csharp

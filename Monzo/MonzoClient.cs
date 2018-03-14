@@ -42,6 +42,22 @@ namespace Monzo
         public string AccessToken => _httpClient.DefaultRequestHeaders.Authorization?.Parameter;
 
         /// <summary>
+        /// Returns information about the current access token.
+        /// </summary>
+        public async Task<WhoAmI> WhoAmIAsync()
+        {
+            HttpResponseMessage response = await _httpClient.GetAsync($"ping/whoami");
+            string body = await response.Content.ReadAsStringAsync();
+
+            if (!response.IsSuccessStatusCode)
+            {
+                throw MonzoException.CreateFromApiResponse(response, body);
+            }
+
+            return JsonConvert.DeserializeObject<WhoAmI>(body);
+        }
+
+        /// <summary>
         /// Returns a list of accounts owned by the currently authorised user.
         /// </summary>
         public async Task<IList<Account>> GetAccountsAsync()

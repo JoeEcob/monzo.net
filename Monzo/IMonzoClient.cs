@@ -17,6 +17,11 @@ namespace Monzo
         string AccessToken { get; }
 
         /// <summary>
+        /// Returns information about the current access token.
+        /// </summary>
+        Task<WhoAmI> WhoAmIAsync();
+
+        /// <summary>
         /// Returns a list of accounts owned by the currently authorised user.
         /// </summary>
         Task<IList<Account>> GetAccountsAsync();
