@@ -27,5 +27,29 @@ namespace Monzo
         /// </summary>
         [JsonProperty("created")]
         public DateTime Created { get; set; }
+
+        /// <summary>
+        /// If the account is prepaid or a current account.
+        /// </summary>
+        [JsonProperty("type")]
+        public AccountType Type { get; set; }
+
+        /// <summary>
+        /// Sort code for the account.
+        /// </summary>
+        [JsonProperty("sort_code")]
+        public string SortCode { get; set; }
+
+        /// <summary>
+        /// Unique account number.
+        /// </summary>
+        [JsonProperty("account_number")]
+        public string AccountNumber { get; set; }
+
+        /// <summary>
+        /// Flag for if the account has been closed.
+        /// </summary>
+        [JsonProperty("closed")]
+        public bool Closed { get; set; }
     }
 }
