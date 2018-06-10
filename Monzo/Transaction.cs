@@ -31,6 +31,18 @@ namespace Monzo
         public string DeclineReason { get; set; }
 
         /// <summary>
+        /// The category can be set for each transaction by the user. Over time we learn which merchant goes in which category and auto-assign the category of a transaction. If the user hasn’t set a category, we’ll return the default category of the merchant on this transactions. Top-ups have category “monzo”. Valid values are general, eating_out, expenses, transport, cash, bills, entertainment, shopping, holidays, groceries
+        /// </summary>
+        [JsonProperty("category")]
+        public string Category { get; set; }
+
+        /// <summary>
+        /// Details of the payee if the transaction was a bank transfer. Null otherwise.
+        /// </summary>
+        [JsonProperty("counterparty")]
+        public CounterParty CounterParty { get; set; }
+
+        /// <summary>
         /// Time the transaction was created.
         /// </summary>
         [JsonProperty("created")]
@@ -55,6 +67,18 @@ namespace Monzo
         public string Id { get; set; }
 
         /// <summary>
+        /// Flag for if the transaction should be included in your spending summary.
+        /// </summary>
+        [JsonProperty("include_in_spending")]
+        public bool IncludeInSpending { get; set; }
+
+        /// <summary>
+        /// Top-ups to an account are represented as transactions with a positive amount and is_load = true. Other transactions such as refunds, reversals or chargebacks may have a positive amount but is_load = false
+        /// </summary>
+        [JsonProperty("is_load")]
+        public bool IsLoad { get; set; }
+
+        /// <summary>
         /// This contains the merchant_id of the merchant that this transaction was made at. If you pass ?expand[]=merchant in your request URL, it will contain lots of information about the merchant.
         /// </summary>
         [JsonProperty("merchant")]
@@ -74,21 +98,9 @@ namespace Monzo
         public string Notes { get; set; }
 
         /// <summary>
-        /// Top-ups to an account are represented as transactions with a positive amount and is_load = true. Other transactions such as refunds, reversals or chargebacks may have a positive amount but is_load = false
-        /// </summary>
-        [JsonProperty("is_load")]
-        public bool IsLoad { get; set; }
-
-        /// <summary>
         /// You probably don’t need to worry about this. Card transactions only settle 24-48 hours (sometimes even more!) after the purchase; until then they are just “authorised” and settled = false on them.
         /// </summary>
         [JsonProperty("settled")]
         public string Settled { get; set; }
-
-        /// <summary>
-        /// The category can be set for each transaction by the user. Over time we learn which merchant goes in which category and auto-assign the category of a transaction. If the user hasn’t set a category, we’ll return the default category of the merchant on this transactions. Top-ups have category “monzo”. Valid values are general, eating_out, expenses, transport, cash, bills, entertainment, shopping, holidays, groceries
-        /// </summary>
-        [JsonProperty("category")]
-        public string Category { get; set; }
     }
 }

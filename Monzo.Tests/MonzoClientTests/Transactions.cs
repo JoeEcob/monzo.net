@@ -283,6 +283,81 @@ namespace Monzo.Tests.MonzoClientTests
         }
 
         [Test]
+        public async void CanGetBankTransfer()
+        {
+            using (var server = TestServer.Create(app =>
+            {
+                app.Run(async context =>
+                {
+                    Assert.AreEqual("Bearer testAccessToken", context.Request.Headers["Authorization"]);
+
+                    // workaround for mono bug
+                    Assert.That(context.Request.Uri.PathAndQuery, Is.EqualTo("/transactions/1?expand[]=merchant").Or.EqualTo("/transactions/1?expand%5B%5D=merchant"));
+
+                    await context.Response.WriteAsync(
+                        @"{
+                            'transaction': {
+                                'id': 'tx_0000000000000000000001',
+                                'created': '2017-11-11T14:40:22.354Z',
+                                'description': 'Monzo',
+                                'amount': 10000,
+                                'fees': {},
+                                'currency': 'GBP',
+                                'merchant': null,
+                                'notes': 'Monzo',
+                                'metadata': {
+                                    'faster_payment': 'true',
+                                    'insertion': 'entryset_0000000000000000000001',
+                                    'notes': 'Monzo',
+                                    'trn': '000000000000000000'
+                                },
+                                'labels': null,
+                                'account_balance': 0,
+                                'attachments': [],
+                                'international': null,
+                                'category': 'general',
+                                'is_load': false,
+                                'settled': '2017-11-13T07:00:00Z',
+                                'local_amount': 10000,
+                                'local_currency': 'GBP',
+                                'updated': '2017-11-11T14:40:22.423Z',
+                                'account_id': 'acc_0000000000000000000000',
+                                'user_id': '',
+                                'counterparty': {
+                                    'account_number': '12345678',
+                                    'name': 'Paddington Bear',
+                                    'sort_code': '040004',
+                                    'user_id': 'anonuser_0000000000000000000001'
+                                },
+                                'scheme': 'payport_faster_payments',
+                                'dedupe_id': 'payport-faster-payments:inbound:000000000000000000',
+                                'originator': false,
+                                'include_in_spending': false,
+                                'can_be_excluded_from_breakdown': false
+                            }
+                        }"
+                    );
+                });
+            }))
+            {
+                using (var client = new MonzoClient(server.HttpClient, "testAccessToken"))
+                {
+                    var transaction = await client.GetTransactionAsync("1", "merchant");
+
+                    Assert.AreEqual(10000, transaction.Amount);
+                    Assert.AreEqual("general", transaction.Category);
+                    Assert.AreEqual(false, transaction.IncludeInSpending);
+                    Assert.AreEqual(false, transaction.IsLoad);
+                    Assert.AreEqual("12345678", transaction.CounterParty.AccountNumber);
+                    Assert.AreEqual("Paddington Bear", transaction.CounterParty.Name);
+                    Assert.AreEqual("040004", transaction.CounterParty.SortCode);
+                    Assert.AreEqual("anonuser_0000000000000000000001", transaction.CounterParty.UserId);
+                }
+            }
+
+        }
+
+        [Test]
         public async void CanAnnotateTransaction()
         {
             using (var server = TestServer.Create(app =>
