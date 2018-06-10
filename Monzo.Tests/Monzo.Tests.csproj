@@ -61,8 +61,14 @@
   <ItemGroup>
     <Compile Include="Extensions\DateTimeExtensionsTests.cs" />
     <Compile Include="Messages\MerchantJsonConverterTests.cs" />
-    <Compile Include="MonzoAuthorizationClientTests.cs" />
-    <Compile Include="MonzoClientTests.cs" />
+    <Compile Include="MonzoAuthorizationClientTests\MonzoAuthorizationClientTests.cs" />
+    <Compile Include="MonzoClientTests\Accounts.cs" />
+    <Compile Include="MonzoClientTests\Attachements.cs" />
+    <Compile Include="MonzoClientTests\Balance.cs" />
+    <Compile Include="MonzoClientTests\Feed.cs" />
+    <Compile Include="MonzoClientTests\Transactions.cs" />
+    <Compile Include="MonzoClientTests\Webhooks.cs" />
+    <Compile Include="MonzoClientTests\WhoAmI.cs" />
     <Compile Include="PaginationOptionsTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

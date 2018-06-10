@@ -2,7 +2,7 @@
 using NUnit.Framework;
 using Owin;
 
-namespace Monzo.Tests
+namespace Monzo.Tests.MonzoAuthorizationClientTests
 {
     [TestFixture]
     public sealed class MonzoAuthorizationClientTests
@@ -10,7 +10,7 @@ namespace Monzo.Tests
         [Test]
         public void GetLoginPageUrl()
         {
-            using (var client = new MonzoAuthorizationClient("testClientId", "testClientSecret", "http://foo"))
+            using (var client = new Monzo.MonzoAuthorizationClient("testClientId", "testClientSecret", "http://foo"))
             {
                 var loginPageUrl = client.GetAuthorizeUrl("testState", "testRedirectUri");
 
@@ -48,7 +48,7 @@ namespace Monzo.Tests
                 });
             }))
             {
-                using (var client = new MonzoAuthorizationClient(server.HttpClient, "testClientId", "testClientSecret"))
+                using (var client = new Monzo.MonzoAuthorizationClient(server.HttpClient, "testClientId", "testClientSecret"))
                 {
                     var accessToken = await client.GetAccessTokenAsync("testCode", "testRedirectUri");
 
@@ -90,7 +90,7 @@ namespace Monzo.Tests
                 });
             }))
             {
-                using (var client = new MonzoAuthorizationClient(server.HttpClient, "testClientId", "testClientSecret"))
+                using (var client = new Monzo.MonzoAuthorizationClient(server.HttpClient, "testClientId", "testClientSecret"))
                 {
                     var accessToken = await client.AuthenticateAsync("testUsername", "testPassword");
 
@@ -131,7 +131,7 @@ namespace Monzo.Tests
                 });
             }))
             {
-                using (var client = new MonzoAuthorizationClient(server.HttpClient, "testClientId", "testClientSecret"))
+                using (var client = new Monzo.MonzoAuthorizationClient(server.HttpClient, "testClientId", "testClientSecret"))
                 {
                     var accessToken = await client.RefreshAccessTokenAsync("testAccessToken1");
 

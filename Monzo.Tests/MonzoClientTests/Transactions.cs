@@ -5,122 +5,13 @@ using Microsoft.Owin.Testing;
 using NUnit.Framework;
 using Owin;
 
-namespace Monzo.Tests
+namespace Monzo.Tests.MonzoClientTests
 {
     [TestFixture]
-    public sealed class MonzoApiClientTests
+    public sealed class Transactions
     {
         [Test]
-        public async void WhoAmI()
-        {
-            using (var server = TestServer.Create(app =>
-            {
-                app.Run(async context =>
-                {
-                    Assert.AreEqual("/ping/whoami", context.Request.Uri.PathAndQuery);
-
-                    Assert.AreEqual("Bearer testAccessToken", context.Request.Headers["Authorization"]);
-
-                    await context.Response.WriteAsync(
-                        @"{
-                            'authenticated': true,
-                            'client_id': 'oauth_abc123',
-                            'user_id': 'user_00009238aMBIIrS5Rdncq9',
-                        }"
-                    );
-                });
-            }))
-            {
-                using (var client = new MonzoClient(server.HttpClient, "testAccessToken"))
-                {
-                    var response = await client.WhoAmIAsync();
-
-                    Assert.AreEqual(true, response.Authenticated);
-                    Assert.AreEqual("oauth_abc123", response.ClientId);
-                    Assert.AreEqual("user_00009238aMBIIrS5Rdncq9", response.UserId);
-                }
-            }
-        }
-
-        [Test]
-        public async void GetAccounts()
-        {
-            using (var server = TestServer.Create(app =>
-            {
-                app.Run(async context =>
-                {
-                    Assert.AreEqual("/accounts", context.Request.Uri.PathAndQuery);
-
-                    Assert.AreEqual("Bearer testAccessToken", context.Request.Headers["Authorization"]);
-
-                    await context.Response.WriteAsync(
-                        @"{
-                            'accounts': [
-                                {
-                                    'id': 'acc_00009237aqC8c5umZmrRdh',
-                                    'description': 'Peter Pan\'s Account',
-                                    'created': '2015-11-13T12:17:42Z',
-                                    'type': 'uk_retail',
-                                    'sort_code': '040004',
-                                    'account_number': '12345678',
-                                    'closed': false
-                                }
-                            ]
-                        }"
-                    );
-                });
-            }))
-            {
-                using (var client = new MonzoClient(server.HttpClient, "testAccessToken"))
-                {
-                    var accounts = await client.GetAccountsAsync();
-
-                    Assert.AreEqual(1, accounts.Count);
-                    Assert.AreEqual("acc_00009237aqC8c5umZmrRdh", accounts[0].Id);
-                    Assert.AreEqual("Peter Pan's Account", accounts[0].Description);
-                    Assert.AreEqual(AccountType.uk_retail, accounts[0].Type);
-                    Assert.AreEqual("040004", accounts[0].SortCode);
-                    Assert.AreEqual("12345678", accounts[0].AccountNumber);
-                    Assert.AreEqual(false, accounts[0].Closed);
-                    Assert.AreEqual(new DateTime(2015, 11, 13, 12, 17, 42, DateTimeKind.Utc), accounts[0].Created);
-                }
-            }
-        }
-
-        [Test]
-        public async void GetBalance()
-        {
-            using (var server = TestServer.Create(app =>
-            {
-                app.Run(async context =>
-                {
-                    Assert.AreEqual("/balance?account_id=1", context.Request.Uri.PathAndQuery);
-
-                    Assert.AreEqual("Bearer testAccessToken", context.Request.Headers["Authorization"]);
-
-                    await context.Response.WriteAsync(
-                        @"{
-                            'balance': 5000,
-                            'currency': 'GBP',
-                            'spend_today': -100
-                        }"
-                    );
-                });
-            }))
-            {
-                using (var client = new MonzoClient(server.HttpClient, "testAccessToken"))
-                {
-                    var balance = await client.GetBalanceAsync("1");
-
-                    Assert.AreEqual(5000, balance.Value);
-                    Assert.AreEqual("GBP", balance.Currency);
-                    Assert.AreEqual(-100, balance.SpendToday);
-                }
-            }
-        }
-
-        [Test]
-        public async void GetTransactions()
+        public async void CanGetTransactions()
         {
             using (var server = TestServer.Create(app =>
             {
@@ -173,7 +64,7 @@ namespace Monzo.Tests
                     var transactions = await client.GetTransactionsAsync("1");
 
                     Assert.AreEqual(2, transactions.Count);
-                    
+
                     Assert.AreEqual(13013, transactions[0].AccountBalance);
                     Assert.AreEqual(-510, transactions[0].Amount);
                     Assert.AreEqual(new DateTime(2015, 08, 22, 12, 20, 18, DateTimeKind.Utc), transactions[0].Created);
@@ -190,7 +81,7 @@ namespace Monzo.Tests
         }
 
         [Test]
-        public async void GetTransactionsPaginated()
+        public async void CanGetTransactionsPaginated()
         {
             using (var server = TestServer.Create(app =>
             {
@@ -260,7 +151,7 @@ namespace Monzo.Tests
         }
 
         [Test]
-        public async void GetTransaction()
+        public async void CanGetTransaction()
         {
             using (var server = TestServer.Create(app =>
             {
@@ -311,14 +202,14 @@ namespace Monzo.Tests
         }
 
         [Test]
-        public async void GetTransactionExpanded()
+        public async void CanGetTransactionExpanded()
         {
             using (var server = TestServer.Create(app =>
             {
                 app.Run(async context =>
                 {
                     Assert.AreEqual("Bearer testAccessToken", context.Request.Headers["Authorization"]);
-                    
+
                     // workaround for mono bug
                     Assert.That(context.Request.Uri.PathAndQuery, Is.EqualTo("/transactions/1?expand[]=merchant").Or.EqualTo("/transactions/1?expand%5B%5D=merchant"));
 
@@ -392,7 +283,7 @@ namespace Monzo.Tests
         }
 
         [Test]
-        public async void AnnotateTransaction()
+        public async void CanAnnotateTransaction()
         {
             using (var server = TestServer.Create(app =>
             {
@@ -432,208 +323,10 @@ namespace Monzo.Tests
             {
                 using (var client = new MonzoClient(server.HttpClient, "testAccessToken"))
                 {
-                    var transaction = await client.AnnotateTransactionAsync("1", new Dictionary<string, string> { { "key1", "value1" }, {"key2", "" } });
+                    var transaction = await client.AnnotateTransactionAsync("1", new Dictionary<string, string> { { "key1", "value1" }, { "key2", "" } });
 
                     Assert.AreEqual("foo", transaction.Metadata.First().Key);
                     Assert.AreEqual("bar", transaction.Metadata.First().Value);
-                }
-            }
-        }
-
-        [Test]
-        public async void CreateFeedItem()
-        {
-            using (var server = TestServer.Create(app =>
-            {
-                app.Run(async context =>
-                {
-                    Assert.AreEqual("Bearer testAccessToken", context.Request.Headers["Authorization"]);
-                    Assert.AreEqual("POST", context.Request.Method);
-                    Assert.AreEqual("/feed", context.Request.Uri.PathAndQuery);
-
-                    var formCollection = await context.Request.ReadFormAsync();
-                    Assert.AreEqual("1", formCollection["account_id"]);
-                    Assert.AreEqual("basic", formCollection["type"]);
-                    Assert.AreEqual("https://www.example.com/a_page_to_open_on_tap.html", formCollection["url"]);
-                    Assert.AreEqual("My custom item", formCollection["params[title]"]);
-
-                    await context.Response.WriteAsync("{}");
-                });
-            }))
-            {
-                using (var client = new MonzoClient(server.HttpClient, "testAccessToken"))
-                {
-                    await client.CreateFeedItemAsync("1", "basic", new Dictionary<string, string> { {"title", "My custom item" } }, "https://www.example.com/a_page_to_open_on_tap.html");
-                }
-            }
-        }
-
-        [Test]
-        public async void CreateWebhook()
-        {
-            using (var server = TestServer.Create(app =>
-            {
-                app.Run(async context =>
-                {
-                    Assert.AreEqual("Bearer testAccessToken", context.Request.Headers["Authorization"]);
-                    Assert.AreEqual("POST", context.Request.Method);
-                    Assert.AreEqual("/webhooks", context.Request.Uri.PathAndQuery);
-
-                    var formCollection = await context.Request.ReadFormAsync();
-                    Assert.AreEqual("1", formCollection["account_id"]);
-                    Assert.AreEqual("http://example.com", formCollection["url"]);
-
-                    await context.Response.WriteAsync(
-                        @"{
-                            'webhook': {
-                                'account_id': 'account_id',
-                                'id': 'webhook_id',
-                                'url': 'http://example.com'
-                            }
-                        }"
-                    );
-                });
-            }))
-            {
-                using (var client = new MonzoClient(server.HttpClient, "testAccessToken"))
-                {
-                    var webhook = await client.CreateWebhookAsync("1", "http://example.com");
-
-                    Assert.AreEqual("account_id", webhook.AccountId);
-                    Assert.AreEqual("webhook_id", webhook.Id);
-                    Assert.AreEqual("http://example.com", webhook.Url);
-                }
-            }
-        }
-
-        [Test]
-        public async void GetWebhooks()
-        {
-            using (var server = TestServer.Create(app =>
-            {
-                app.Run(async context =>
-                {
-                    Assert.AreEqual("/webhooks?account_id=1", context.Request.Uri.PathAndQuery);
-
-                    Assert.AreEqual("Bearer testAccessToken", context.Request.Headers["Authorization"]);
-
-                    await context.Response.WriteAsync(
-                        @"{
-                            'webhooks': [
-                                {
-                                    'account_id': 'acc_000091yf79yMwNaZHhHGzp',
-                                    'id': 'webhook_000091yhhOmrXQaVZ1Irsv',
-                                    'url': 'http://example.com/callback'
-                                }
-                            ]
-                        }"
-                    );
-                });
-            }))
-            {
-                using (var client = new MonzoClient(server.HttpClient, "testAccessToken"))
-                {
-                    var webhooks = await client.GetWebhooksAsync("1");
-
-                    Assert.AreEqual(1, webhooks.Count);
-                    Assert.AreEqual("webhook_000091yhhOmrXQaVZ1Irsv", webhooks[0].Id);
-                    Assert.AreEqual("acc_000091yf79yMwNaZHhHGzp", webhooks[0].AccountId);
-                    Assert.AreEqual("http://example.com/callback", webhooks[0].Url);
-                }
-            }
-        }
-
-        [Test]
-        public async void DeleteWebhook()
-        {
-            using (var server = TestServer.Create(app =>
-            {
-                app.Run(async context =>
-                {
-                    Assert.AreEqual("/webhooks/1", context.Request.Uri.PathAndQuery);
-                    Assert.AreEqual("DELETE", context.Request.Method);
-
-                    Assert.AreEqual("Bearer testAccessToken", context.Request.Headers["Authorization"]);
-
-                    await context.Response.WriteAsync("{}");
-                });
-            }))
-            {
-                using (var client = new MonzoClient(server.HttpClient, "testAccessToken"))
-                {
-                    await client.DeleteWebhookAsync("1");
-                }
-            }
-        }
-
-        [Test]
-        public async void CreateAttachment()
-        {
-            using (var server = TestServer.Create(app =>
-            {
-                app.Run(async context =>
-                {
-                    Assert.AreEqual("/attachment/register", context.Request.Uri.PathAndQuery);
-                    Assert.AreEqual("POST", context.Request.Method);
-
-                    Assert.AreEqual("Bearer testAccessToken", context.Request.Headers["Authorization"]);
-
-                    var formCollection = await context.Request.ReadFormAsync();
-                    Assert.AreEqual("tx_00008zIcpb1TB4yeIFXMzx", formCollection["external_id"]);
-                    Assert.AreEqual("image/png", formCollection["file_type"]);
-                    Assert.AreEqual("https://s3-eu-west-1.amazonaws.com/mondo-image-uploads/user_00009237hliZellUicKuG1/LcCu4ogv1xW28OCcvOTL-foo.png", formCollection["file_url"]);
-
-                    await context.Response.WriteAsync(
-                        @"{
-                            'attachment': {
-                                'id': 'attach_00009238aOAIvVqfb9LrZh',
-                                'user_id': 'user_00009238aMBIIrS5Rdncq9',
-                                'external_id': 'tx_00008zIcpb1TB4yeIFXMzx',
-                                'file_url': 'https://s3-eu-west-1.amazonaws.com/mondo-image-uploads/user_00009237hliZellUicKuG1/LcCu4ogv1xW28OCcvOTL-foo.png',
-                                'file_type': 'image/png',
-                                'created': '2015-11-12T18:37:02Z'
-                            }
-                        }"
-                    );
-                });
-            }))
-            {
-                using (var client = new MonzoClient(server.HttpClient, "testAccessToken"))
-                {
-                    var attachment = await client.CreateAttachmentAsync("tx_00008zIcpb1TB4yeIFXMzx", "https://s3-eu-west-1.amazonaws.com/mondo-image-uploads/user_00009237hliZellUicKuG1/LcCu4ogv1xW28OCcvOTL-foo.png", "image/png");
-
-                    Assert.AreEqual("attach_00009238aOAIvVqfb9LrZh", attachment.Id);
-                    Assert.AreEqual("user_00009238aMBIIrS5Rdncq9", attachment.UserId);
-                    Assert.AreEqual("tx_00008zIcpb1TB4yeIFXMzx", attachment.ExternalId);
-                    Assert.AreEqual("https://s3-eu-west-1.amazonaws.com/mondo-image-uploads/user_00009237hliZellUicKuG1/LcCu4ogv1xW28OCcvOTL-foo.png", attachment.FileUrl);
-                    Assert.AreEqual("image/png", attachment.FileType);
-                    Assert.AreEqual(new DateTime(2015, 11, 12, 18, 37, 2, DateTimeKind.Utc), attachment.Created);
-                }
-            }
-        }
-
-        [Test]
-        public async void DeleteAttachment()
-        {
-            using (var server = TestServer.Create(app =>
-            {
-                app.Run(async context =>
-                {
-                    Assert.AreEqual("/attachment/deregister", context.Request.Uri.PathAndQuery);
-                    Assert.AreEqual("POST", context.Request.Method);
-
-                    Assert.AreEqual("Bearer testAccessToken", context.Request.Headers["Authorization"]);
-
-                    var formCollection = await context.Request.ReadFormAsync();
-                    Assert.AreEqual("attach_00009238aOAIvVqfb9LrZh", formCollection["id"]);
-
-                    await context.Response.WriteAsync("{}");
-                });
-            }))
-            {
-                using (var client = new MonzoClient(server.HttpClient, "testAccessToken"))
-                {
-                    await client.DeleteAttachmentAsync("attach_00009238aOAIvVqfb9LrZh");
                 }
             }
         }
