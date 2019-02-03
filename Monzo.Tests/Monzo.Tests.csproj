@@ -66,6 +66,7 @@
     <Compile Include="MonzoClientTests\Attachements.cs" />
     <Compile Include="MonzoClientTests\Balance.cs" />
     <Compile Include="MonzoClientTests\Feed.cs" />
+    <Compile Include="MonzoClientTests\Pots.cs" />
     <Compile Include="MonzoClientTests\Transactions.cs" />
     <Compile Include="MonzoClientTests\Webhooks.cs" />
     <Compile Include="MonzoClientTests\WhoAmI.cs" />

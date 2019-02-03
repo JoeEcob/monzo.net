@@ -2,7 +2,7 @@
 
 ![Monzo](https://twitter.com/monzo/profile_image?size=original)
 
-[![NuGet version](https://img.shields.io/nuget/v/Monzo.svg)](http://nuget.org/List/Packages/Monzo)  [![NuGet downloads](https://img.shields.io/nuget/dt/Monzo.svg)](http://nuget.org/List/Packages/Monzo)  [![Build status](https://ci.appveyor.com/api/projects/status/t48u8w4ycf4y93b9?svg=true)](https://ci.appveyor.com/project/JoeEcob/monzo-net)  [![License](http://img.shields.io/:license-MIT-blue.svg)](https://raw.githubusercontent.com/JoeEcob/monzo.net/master/LICENSE)
+[![NuGet version](https://img.shields.io/nuget/v/Monzo.svg)](http://nuget.org/List/Packages/Monzo)  [![NuGet downloads](https://img.shields.io/nuget/dt/Monzo.svg)](http://nuget.org/List/Packages/Monzo)  [![Build status](https://ci.appveyor.com/api/projects/status/t48u8w4ycf4y93b9?svg=true)](https://ci.appveyor.com/project/JoeEcob/monzo-net)  [![License](http://img.shields.io/:license-MIT-blue.svg)](https://gitlab.com/JoeEcob/monzo.net/raw/dev/LICENSE)
 
 Monzo.NET is a .NET client library for the [Monzo bank API](https://monzo.com/docs/). Use it to build apps and view your accounts, balances and transactions, create feed items, manage webhooks and attachments, and more!
 

@@ -385,6 +385,84 @@ namespace Monzo
         }
 
         /// <summary>
+        /// Returns a list of pots owned by the currently authorised user.
+        /// </summary>
+        public async Task<IList<Pot>> GetPotsAsync()
+        {
+            HttpResponseMessage response = await _httpClient.GetAsync($"pots");
+            string body = await response.Content.ReadAsStringAsync();
+
+            if (!response.IsSuccessStatusCode)
+            {
+                throw MonzoException.CreateFromApiResponse(response, body);
+            }
+
+            return JsonConvert.DeserializeObject<ListPotsResponse>(body).Pots;
+        }
+
+        //// <summary>
+        /// Move money from an account owned by the currently authorised user into one of their pots.
+        /// </summary>
+        /// <param name="potId">The id of the pot to deposit into.</param>
+        /// <param name="sourceAccountId">The id of the account to withdraw from.</param>
+        /// <param name="amount">The amount to deposit, as a 64bit integer in minor units of the currency, eg. pennies for GBP, or cents for EUR and USD.</param>
+        /// <param name="dedupeId">A unique string used to de-duplicate deposits. Ensure this remains static between retries to ensure only one deposit is created.</param>
+        /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
+        /// <returns>Updated information about the pot deposited into</returns>
+        public async Task<Pot> DepositIntoPotAsync(string potId, string sourceAccountId, long amount, string dedupeId, CancellationToken cancellationToken = default(CancellationToken))
+        {
+            if (string.IsNullOrWhiteSpace(potId)) throw new ArgumentNullException(nameof(potId));
+
+            var formValues = new Dictionary<string, string>
+            {
+                {"source_account_id", sourceAccountId},
+                {"amount", amount.ToString()},
+                {"dedupe_id", dedupeId}
+            };
+
+            HttpResponseMessage response = await _httpClient.PutAsync($"pots/{potId}/deposit", new FormUrlEncodedContent(formValues), cancellationToken);
+            string body = await response.Content.ReadAsStringAsync();
+
+            if (!response.IsSuccessStatusCode)
+            {
+                throw MonzoException.CreateFromApiResponse(response, body);
+            }
+
+            return JsonConvert.DeserializeObject<Pot>(body);
+        }
+
+        /// <summary>
+        /// Move money from a pot owned by the currently authorised user into one of their accounts.
+        /// </summary>
+        /// <param name="potId">The id of the pot to deposit into.</param>
+        /// <param name="destinationAccountId">The id of the account to deposit into.</param>
+        /// <param name="amount">The amount to deposit, as a 64bit integer in minor units of the currency, eg. pennies for GBP, or cents for EUR and USD.</param>
+        /// <param name="dedupeId">A unique string used to de-duplicate deposits. Ensure this remains static between retries to ensure only one withdrawal is created.</param>
+        /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
+        /// <returns>Updated information about the pot withdrawn from</returns>
+        public async Task<Pot> WithdrawFromPotAsync(string potId, string destinationAccountId, long amount, string dedupeId, CancellationToken cancellationToken = default(CancellationToken))
+        {
+            if (string.IsNullOrWhiteSpace(potId)) throw new ArgumentNullException(nameof(potId));
+
+            var formValues = new Dictionary<string, string>
+            {
+                {"destination_account_id", destinationAccountId},
+                {"amount", amount.ToString()},
+                {"dedupe_id", dedupeId}
+            };
+
+            HttpResponseMessage response = await _httpClient.PutAsync($"pots/{potId}/withdraw", new FormUrlEncodedContent(formValues), cancellationToken);
+            string body = await response.Content.ReadAsStringAsync();
+
+            if (!response.IsSuccessStatusCode)
+            {
+                throw MonzoException.CreateFromApiResponse(response, body);
+            }
+
+            return JsonConvert.DeserializeObject<Pot>(body);
+        }
+
+        /// <summary>
         /// Disposes the underlying HttpClient.
         /// </summary>
         public void Dispose()

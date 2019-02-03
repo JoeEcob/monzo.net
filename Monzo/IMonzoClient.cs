@@ -112,5 +112,32 @@ namespace Monzo
         /// <param name="id">The id of the attachment to deregister.</param>
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
         Task DeleteAttachmentAsync(string id, CancellationToken cancellationToken = default(CancellationToken));
+
+        /// <summary>
+        /// Returns a list of pots owned by the currently authorised user.
+        /// </summary>
+        Task<IList<Pot>> GetPotsAsync();
+
+        /// <summary>
+        /// Move money from an account owned by the currently authorised user into one of their pots.
+        /// </summary>
+        /// <param name="potId">The id of the pot to deposit into.</param>
+        /// <param name="sourceAccountId">The id of the account to withdraw from.</param>
+        /// <param name="amount">The amount to deposit, as a 64bit integer in minor units of the currency, eg. pennies for GBP, or cents for EUR and USD.</param>
+        /// <param name="dedupeId">A unique string used to de-duplicate deposits. Ensure this remains static between retries to ensure only one deposit is created.</param>
+        /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
+        /// <returns>Updated information about the pot deposited into</returns>
+        Task<Pot> DepositIntoPotAsync(string potId, string sourceAccountId, long amount, string dedupeId, CancellationToken cancellationToken = default(CancellationToken));
+
+        /// <summary>
+        /// Move money from a pot owned by the currently authorised user into one of their accounts.
+        /// </summary>
+        /// <param name="potId">The id of the pot to deposit into.</param>
+        /// <param name="destinationAccountId">The id of the account to deposit into.</param>
+        /// <param name="amount">The amount to deposit, as a 64bit integer in minor units of the currency, eg. pennies for GBP, or cents for EUR and USD.</param>
+        /// <param name="dedupeId">A unique string used to de-duplicate deposits. Ensure this remains static between retries to ensure only one withdrawal is created.</param>
+        /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
+        /// <returns>Updated information about the pot withdrawn from</returns>
+        Task<Pot> WithdrawFromPotAsync(string potId, string destinationAccountId, long amount, string dedupeId, CancellationToken cancellationToken = default(CancellationToken));
     }
 }
