@@ -51,5 +51,23 @@ namespace Monzo
         /// </summary>
         [JsonProperty("closed")]
         public bool Closed { get; set; }
+
+        /// <summary>
+        /// Currency of the account.
+        /// </summary>
+        [JsonProperty("currency")]
+        public string Currency { get; set; }
+
+        /// <summary>
+        /// ISO Alpha-2 Country Code of the account.
+        /// </summary>
+        [JsonProperty("country_code")]
+        public string CountryCode { get; set; }
+
+        /// <summary>
+        /// Owners of the account.
+        /// </summary>
+        [JsonProperty("owners")]
+        public User[] Owners { get; set; }
     }
 }
