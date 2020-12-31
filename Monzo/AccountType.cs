@@ -6,6 +6,7 @@ namespace Monzo
     {
         uk_prepaid = 1,
         uk_retail = 2,
-        uk_retail_joint = 3
+        uk_retail_joint = 3,
+        uk_loan = 4
     }
 }
