@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Net.Http.Headers;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -116,7 +117,7 @@ namespace Monzo
         /// <summary>
         /// Returns a list of pots owned by the currently authorised user.
         /// </summary>
-        Task<IList<Pot>> GetPotsAsync();
+        Task<IList<Pot>> GetPotsAsync(string currentAccountId);
 
         /// <summary>
         /// Move money from an account owned by the currently authorised user into one of their pots.

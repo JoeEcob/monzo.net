@@ -13,11 +13,13 @@ namespace Monzo.Tests.MonzoClientTests
         [Test]
         public async void CanGetPots()
         {
+            var currentAccountId = "this_is_a_current_account";
+
             using (var server = TestServer.Create(app =>
             {
                 app.Run(async context =>
                 {
-                    Assert.AreEqual("/pots", context.Request.Uri.PathAndQuery);
+                    Assert.AreEqual($"/pots?current_account_id={currentAccountId}", context.Request.Uri.PathAndQuery);
 
                     Assert.AreEqual("Bearer testAccessToken", context.Request.Headers["Authorization"]);
 
@@ -34,7 +36,7 @@ namespace Monzo.Tests.MonzoClientTests
                                     'minimum_balance': -1,
                                     'maximum_balance': -1,
                                     'assigned_permissions': [],
-                                    'current_account_id': '',
+                                    'current_account_id': 'this_is_a_current_account',
                                     'round_up': false,
                                     'created': '2017-12-01T23:00:26.256Z',
                                     'updated': '2018-01-22T08:12:49.497Z',
@@ -50,7 +52,7 @@ namespace Monzo.Tests.MonzoClientTests
             {
                 using (var client = new MonzoClient(server.HttpClient, "testAccessToken"))
                 {
-                    var pots = await client.GetPotsAsync();
+                    var pots = await client.GetPotsAsync(currentAccountId);
 
                     Assert.AreEqual(1, pots.Count);
 
@@ -60,6 +62,7 @@ namespace Monzo.Tests.MonzoClientTests
                     Assert.AreEqual("beach_ball", pot.Style);
                     Assert.AreEqual(500, pot.Balance);
                     Assert.AreEqual("GBP", pot.Currency);
+                    Assert.AreEqual("this_is_a_current_account", pot.CurrentAccountId);
                     Assert.AreEqual(new DateTime(2017, 12, 1, 23, 00, 26, 256, DateTimeKind.Utc), pot.Created);
                     Assert.AreEqual(new DateTime(2018, 1, 22, 8, 12, 49, 497, DateTimeKind.Utc), pot.Updated);
                     Assert.AreEqual(false, pot.RoundUp);

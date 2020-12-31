@@ -387,9 +387,12 @@ namespace Monzo
         /// <summary>
         /// Returns a list of pots owned by the currently authorised user.
         /// </summary>
-        public async Task<IList<Pot>> GetPotsAsync()
+        /// <param name="currentAccountId">The ID of the current account you wish to retrieve the pots from</param>
+        public async Task<IList<Pot>> GetPotsAsync(string currentAccountId)
         {
-            HttpResponseMessage response = await _httpClient.GetAsync($"pots");
+            if (currentAccountId == null) throw new ArgumentNullException(nameof(currentAccountId));
+
+            HttpResponseMessage response = await _httpClient.GetAsync($"pots?current_account_id={currentAccountId}");
             string body = await response.Content.ReadAsStringAsync();
 
             if (!response.IsSuccessStatusCode)

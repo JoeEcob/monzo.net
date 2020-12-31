@@ -62,6 +62,22 @@ namespace Monzo.Tests.MonzoClientTests
                                             'preferred_first_name': 'Peter'
                                         }
                                     ]
+                                },
+								{
+                                    'id': 'acc_00009abcdefghijklmnopq',
+                                    'closed': false,
+                                    'created': '2019-10-27T19:50:42Z',
+                                    'description': 'loan_00009abcdefghijklmnopq',
+                                    'type': 'uk_loan',
+                                    'currency': 'GBP',
+                                    'country_code': 'GB',
+                                    'owners': [
+                                        {
+                                            'user_id': 'user_00009awdawdawdawdg',
+                                            'preferred_name': 'Peter Pan',
+                                            'preferred_first_name': 'Peter'
+                                        }
+                                    ]
                                 }
                             ]
                         }"
@@ -73,7 +89,7 @@ namespace Monzo.Tests.MonzoClientTests
                 {
                     var accounts = await client.GetAccountsAsync();
 
-                    Assert.AreEqual(2, accounts.Count);
+                    Assert.AreEqual(3, accounts.Count);
                     var singleAccount = accounts[0];
                     #region Single Account
                     Assert.AreEqual("acc_00009237aqC8c5umZmrRdh", singleAccount.Id);
@@ -83,14 +99,14 @@ namespace Monzo.Tests.MonzoClientTests
                     Assert.AreEqual("12345678", singleAccount.AccountNumber);
                     Assert.AreEqual(false, singleAccount.Closed);
                     Assert.AreEqual(1, singleAccount.Owners.Length);
-                    
+
                     Assert.AreEqual("user_00009awdawdawdawdg", singleAccount.Owners[0].Id);
                     Assert.AreEqual("Peter Pan", singleAccount.Owners[0].PreferredName);
                     Assert.AreEqual("Peter", singleAccount.Owners[0].PreferredFirstName);
 
                     Assert.AreEqual(new DateTime(2015, 11, 13, 12, 17, 42, DateTimeKind.Utc), singleAccount.Created);
                     #endregion
-                    
+
                     var jointAccount = accounts[1];
                     #region Joint Account
                     Assert.AreEqual("acc_00009238aqC8c5umZmrRdh", jointAccount.Id);
@@ -109,6 +125,22 @@ namespace Monzo.Tests.MonzoClientTests
 
                     Assert.AreEqual(new DateTime(2019, 10, 27, 19, 50, 42, DateTimeKind.Utc), jointAccount.Created);
                     #endregion
+
+                    var loan = accounts[2];
+
+                    #region Loan
+                    Assert.AreEqual("acc_00009abcdefghijklmnopq", loan.Id);
+                    Assert.AreEqual(false, loan.Closed);
+                    Assert.AreEqual("loan_00009abcdefghijklmnopq", loan.Description);
+                    Assert.AreEqual(AccountType.uk_loan, loan.Type);
+                    Assert.AreEqual("GBP", loan.Currency);
+                    Assert.AreEqual("GB", loan.CountryCode);
+                    Assert.AreEqual("user_00009awdawdawdawdg", loan.Owners[0].Id);
+                    Assert.AreEqual("Peter Pan", loan.Owners[0].PreferredName);
+                    Assert.AreEqual("Peter", loan.Owners[0].PreferredFirstName);
+
+                    Assert.AreEqual(new DateTime(2019, 10, 27, 19, 50, 42, DateTimeKind.Utc), loan.Created);
+                    #endregion  
                 }
             }
         }
