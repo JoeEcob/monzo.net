@@ -1,46 +1,30 @@
-﻿using System;
-using Microsoft.Owin.Testing;
-using NUnit.Framework;
-using Owin;
-
-namespace Monzo.Tests.MonzoClientTests
+﻿namespace Monzo.Tests.MonzoClientTests
 {
+    using System;
+    using System.Net;
+    using System.Threading.Tasks;
+    using Monzo.Tests.Fakes;
+    using NUnit.Framework;
+
     [TestFixture]
     public sealed class Attachements
     {
         [Test]
-        public async void CanCreateAttachment()
+        public async Task CanCreateAttachment()
         {
-            using (var server = TestServer.Create(app =>
-            {
-                app.Run(async context =>
-                {
-                    Assert.AreEqual("/attachment/register", context.Request.Uri.PathAndQuery);
-                    Assert.AreEqual("POST", context.Request.Method);
+            var (httpClient, fakeMessageHandler) = FakeHttpClientFactory.Create(HttpStatusCode.OK,
+                @"{
+                    'attachment': {
+                        'id': 'attach_00009238aOAIvVqfb9LrZh',
+                        'user_id': 'user_00009238aMBIIrS5Rdncq9',
+                        'external_id': 'tx_00008zIcpb1TB4yeIFXMzx',
+                        'file_url': 'https://s3-eu-west-1.amazonaws.com/mondo-image-uploads/user_00009237hliZellUicKuG1/LcCu4ogv1xW28OCcvOTL-foo.png',
+                        'file_type': 'image/png',
+                        'created': '2015-11-12T18:37:02Z'
+                    }
+                }");
 
-                    Assert.AreEqual("Bearer testAccessToken", context.Request.Headers["Authorization"]);
-
-                    var formCollection = await context.Request.ReadFormAsync();
-                    Assert.AreEqual("tx_00008zIcpb1TB4yeIFXMzx", formCollection["external_id"]);
-                    Assert.AreEqual("image/png", formCollection["file_type"]);
-                    Assert.AreEqual("https://s3-eu-west-1.amazonaws.com/mondo-image-uploads/user_00009237hliZellUicKuG1/LcCu4ogv1xW28OCcvOTL-foo.png", formCollection["file_url"]);
-
-                    await context.Response.WriteAsync(
-                        @"{
-                            'attachment': {
-                                'id': 'attach_00009238aOAIvVqfb9LrZh',
-                                'user_id': 'user_00009238aMBIIrS5Rdncq9',
-                                'external_id': 'tx_00008zIcpb1TB4yeIFXMzx',
-                                'file_url': 'https://s3-eu-west-1.amazonaws.com/mondo-image-uploads/user_00009237hliZellUicKuG1/LcCu4ogv1xW28OCcvOTL-foo.png',
-                                'file_type': 'image/png',
-                                'created': '2015-11-12T18:37:02Z'
-                            }
-                        }"
-                    );
-                });
-            }))
-            {
-                using (var client = new MonzoClient(server.HttpClient, "testAccessToken"))
+                using (var client = new MonzoClient(httpClient, "testAccessToken"))
                 {
                     var attachment = await client.CreateAttachmentAsync("tx_00008zIcpb1TB4yeIFXMzx", "https://s3-eu-west-1.amazonaws.com/mondo-image-uploads/user_00009237hliZellUicKuG1/LcCu4ogv1xW28OCcvOTL-foo.png", "image/png");
 
@@ -51,33 +35,37 @@ namespace Monzo.Tests.MonzoClientTests
                     Assert.AreEqual("image/png", attachment.FileType);
                     Assert.AreEqual(new DateTime(2015, 11, 12, 18, 37, 2, DateTimeKind.Utc), attachment.Created);
                 }
-            }
+
+                Assert.AreEqual("/attachment/register", fakeMessageHandler.Request.RequestUri.PathAndQuery);
+                Assert.AreEqual("POST", fakeMessageHandler.Request.Method.ToString());
+
+                Assert.AreEqual("Bearer testAccessToken", fakeMessageHandler.Request.Headers.Authorization.ToString());
+
+                var formCollection = await fakeMessageHandler.GetQueryStringAsync();
+
+                Assert.AreEqual("tx_00008zIcpb1TB4yeIFXMzx", formCollection["external_id"]);
+                Assert.AreEqual("image/png", formCollection["file_type"]);
+                Assert.AreEqual("https://s3-eu-west-1.amazonaws.com/mondo-image-uploads/user_00009237hliZellUicKuG1/LcCu4ogv1xW28OCcvOTL-foo.png", formCollection["file_url"]);
         }
 
         [Test]
-        public async void CanDeleteAttachment()
+        public async Task CanDeleteAttachment()
         {
-            using (var server = TestServer.Create(app =>
+            var (httpClient, fakeMessageHandler) = FakeHttpClientFactory.Create(HttpStatusCode.OK, "{}");
+
+            using (var client = new MonzoClient(httpClient, "testAccessToken"))
             {
-                app.Run(async context =>
-                {
-                    Assert.AreEqual("/attachment/deregister", context.Request.Uri.PathAndQuery);
-                    Assert.AreEqual("POST", context.Request.Method);
-
-                    Assert.AreEqual("Bearer testAccessToken", context.Request.Headers["Authorization"]);
-
-                    var formCollection = await context.Request.ReadFormAsync();
-                    Assert.AreEqual("attach_00009238aOAIvVqfb9LrZh", formCollection["id"]);
-
-                    await context.Response.WriteAsync("{}");
-                });
-            }))
-            {
-                using (var client = new MonzoClient(server.HttpClient, "testAccessToken"))
-                {
-                    await client.DeleteAttachmentAsync("attach_00009238aOAIvVqfb9LrZh");
-                }
+                await client.DeleteAttachmentAsync("attach_00009238aOAIvVqfb9LrZh");
             }
+
+            Assert.AreEqual("/attachment/deregister", fakeMessageHandler.Request.RequestUri.PathAndQuery);
+            Assert.AreEqual("POST", fakeMessageHandler.Request.Method.ToString());
+
+            Assert.AreEqual("Bearer testAccessToken", fakeMessageHandler.Request.Headers.Authorization.ToString());
+
+            var formCollection = await fakeMessageHandler.GetQueryStringAsync();
+
+            Assert.AreEqual("attach_00009238aOAIvVqfb9LrZh", formCollection["id"]);
         }
     }
 }

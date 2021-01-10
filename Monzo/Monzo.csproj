@@ -4,7 +4,7 @@
     <TargetFramework>netstandard1.1</TargetFramework>
     <PackageId>Monzo</PackageId>
     <AssemblyTitle>Monzo.NET</AssemblyTitle>
-    <Version>0.11.0</Version>
+    <Version>0.12.0</Version>
     <Authors>RichardDingwall JoeEcob</Authors>
     <Copyright>Copyright © Richard Dingwall 2015</Copyright>
     <NeutralLanguage>en-GB</NeutralLanguage>
@@ -17,7 +17,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Newtonsoft.Json" Version="10.0.3" />
+    <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
   </ItemGroup>
 
   <ItemGroup>

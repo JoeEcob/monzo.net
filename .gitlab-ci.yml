@@ -1,0 +1,21 @@
+image : mcr.microsoft.com/dotnet/sdk:5.0-alpine
+
+build:
+  stage: build
+  script:
+    - dotnet build
+
+test:
+  stage: test
+  script:
+    - dotnet test
+
+deploy:
+  stage: deploy
+  only:
+    - dev
+  artifacts:
+    paths:
+      - ./publish/
+  script:
+    - dotnet pack -c Release -o ./publish Monzo/Monzo.csproj

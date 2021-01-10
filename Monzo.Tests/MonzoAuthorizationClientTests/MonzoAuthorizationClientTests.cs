@@ -1,9 +1,10 @@
-﻿using Microsoft.Owin.Testing;
-using NUnit.Framework;
-using Owin;
-
-namespace Monzo.Tests.MonzoAuthorizationClientTests
+﻿namespace Monzo.Tests.MonzoAuthorizationClientTests
 {
+    using Monzo.Tests.Fakes;
+    using NUnit.Framework;
+    using System.Net;
+    using System.Threading.Tasks;
+
     [TestFixture]
     public sealed class MonzoAuthorizationClientTests
     {
@@ -19,127 +20,105 @@ namespace Monzo.Tests.MonzoAuthorizationClientTests
         }
 
         [Test]
-        public async void ExchangeCodeForAccessTokenAsync()
+        public async Task ExchangeCodeForAccessTokenAsync()
         {
-            using (var server = TestServer.Create(app =>
+            var (httpClient, fakeMessageHandler) = FakeHttpClientFactory.Create(HttpStatusCode.OK,
+                @"{
+                    'access_token': 'testAccessToken',
+                    'client_id': 'client_id',
+                    'expires_in': 21600,
+                    'refresh_token': 'testRefreshToken',
+                    'token_type': 'Bearer',
+                    'user_id': 'testUserId'
+                }");
+
+            using (var client = new MonzoAuthorizationClient(httpClient, "testClientId", "testClientSecret"))
             {
-                app.Run(async context =>
-                {
-                    Assert.AreEqual("/oauth2/token", context.Request.Uri.PathAndQuery);
+                var accessToken = await client.GetAccessTokenAsync("testCode", "testRedirectUri");
 
-                    var formCollection = await context.Request.ReadFormAsync();
-
-                    Assert.AreEqual("authorization_code", formCollection["grant_type"]);
-                    Assert.AreEqual("testClientId", formCollection["client_id"]);
-                    Assert.AreEqual("testClientSecret", formCollection["client_secret"]);
-                    Assert.AreEqual("testRedirectUri", formCollection["redirect_uri"]);
-                    Assert.AreEqual("testCode", formCollection["code"]);
-
-                    await context.Response.WriteAsync(
-                        @"{
-                            'access_token': 'testAccessToken',
-                            'client_id': 'client_id',
-                            'expires_in': 21600,
-                            'refresh_token': 'testRefreshToken',
-                            'token_type': 'Bearer',
-                            'user_id': 'testUserId'
-                        }"
-                    );
-                });
-            }))
-            {
-                using (var client = new Monzo.MonzoAuthorizationClient(server.HttpClient, "testClientId", "testClientSecret"))
-                {
-                    var accessToken = await client.GetAccessTokenAsync("testCode", "testRedirectUri");
-
-                    Assert.AreEqual("testAccessToken", accessToken.Value);
-                    Assert.AreEqual("testRefreshToken", accessToken.RefreshToken);
-                    Assert.AreEqual("testUserId", accessToken.UserId);
-                    Assert.AreEqual(21600, accessToken.ExpiresIn);
-                }
+                Assert.AreEqual("testAccessToken", accessToken.Value);
+                Assert.AreEqual("testRefreshToken", accessToken.RefreshToken);
+                Assert.AreEqual("testUserId", accessToken.UserId);
+                Assert.AreEqual(21600, accessToken.ExpiresIn);
             }
+
+            Assert.AreEqual("/oauth2/token", fakeMessageHandler.Request.RequestUri.PathAndQuery);
+
+            var formCollection = await fakeMessageHandler.GetQueryStringAsync();
+
+            Assert.AreEqual("authorization_code", formCollection["grant_type"]);
+            Assert.AreEqual("testClientId", formCollection["client_id"]);
+            Assert.AreEqual("testClientSecret", formCollection["client_secret"]);
+            Assert.AreEqual("testRedirectUri", formCollection["redirect_uri"]);
+            Assert.AreEqual("testCode", formCollection["code"]);
         }
 
         [Test]
-        public async void Authenticate()
+        public async Task Authenticate()
         {
-            using (var server = TestServer.Create(app =>
+            var (httpClient, fakeMessageHandler) = FakeHttpClientFactory.Create(HttpStatusCode.OK,
+                @"{
+                    'access_token': 'testAccessToken',
+                    'client_id': 'client_id',
+                    'expires_in': 21600,
+                    'refresh_token': 'testRefreshToken',
+                    'token_type': 'Bearer',
+                    'user_id': 'testUserId'
+                }");
+
+
+            using (var client = new MonzoAuthorizationClient(httpClient, "testClientId", "testClientSecret"))
             {
-                app.Run(async context =>
-                {
-                    Assert.AreEqual("/oauth2/token", context.Request.Uri.PathAndQuery);
+                var accessToken = await client.AuthenticateAsync("testUsername", "testPassword");
 
-                    var formCollection = await context.Request.ReadFormAsync();
-
-                    Assert.AreEqual("password", formCollection["grant_type"]);
-                    Assert.AreEqual("testClientId", formCollection["client_id"]);
-                    Assert.AreEqual("testClientSecret", formCollection["client_secret"]);
-                    Assert.AreEqual("testUsername", formCollection["username"]);
-                    Assert.AreEqual("testPassword", formCollection["password"]);
-
-                    await context.Response.WriteAsync(
-                        @"{
-                            'access_token': 'testAccessToken',
-                            'client_id': 'client_id',
-                            'expires_in': 21600,
-                            'refresh_token': 'testRefreshToken',
-                            'token_type': 'Bearer',
-                            'user_id': 'testUserId'
-                        }"
-                    );
-                });
-            }))
-            {
-                using (var client = new Monzo.MonzoAuthorizationClient(server.HttpClient, "testClientId", "testClientSecret"))
-                {
-                    var accessToken = await client.AuthenticateAsync("testUsername", "testPassword");
-
-                    Assert.AreEqual("testAccessToken", accessToken.Value);
-                    Assert.AreEqual("testRefreshToken", accessToken.RefreshToken);
-                    Assert.AreEqual("testUserId", accessToken.UserId);
-                    Assert.AreEqual(21600, accessToken.ExpiresIn);
-                }
+                Assert.AreEqual("testAccessToken", accessToken.Value);
+                Assert.AreEqual("testRefreshToken", accessToken.RefreshToken);
+                Assert.AreEqual("testUserId", accessToken.UserId);
+                Assert.AreEqual(21600, accessToken.ExpiresIn);
             }
+
+            Assert.AreEqual("/oauth2/token", fakeMessageHandler.Request.RequestUri.PathAndQuery);
+
+            var formCollection = await fakeMessageHandler.GetQueryStringAsync();
+
+            Assert.AreEqual("password", formCollection["grant_type"]);
+            Assert.AreEqual("testClientId", formCollection["client_id"]);
+            Assert.AreEqual("testClientSecret", formCollection["client_secret"]);
+            Assert.AreEqual("testUsername", formCollection["username"]);
+            Assert.AreEqual("testPassword", formCollection["password"]);
         }
 
         [Test]
-        public async void RefreshAccessToken()
+        public async Task RefreshAccessToken()
         {
-            using (var server = TestServer.Create(app =>
+            var (httpClient, fakeMessageHandler) = FakeHttpClientFactory.Create(HttpStatusCode.OK,
+                @"{
+                    'access_token': 'testAccessToken2',
+                    'client_id': 'client_id',
+                    'expires_in': 21600,
+                    'refresh_token': 'testRefreshToken2',
+                    'token_type': 'Bearer',
+                    'user_id': 'testUserId'
+                }");
+
+            using (var client = new MonzoAuthorizationClient(httpClient, "testClientId", "testClientSecret"))
             {
-                app.Run(async context =>
-                {
-                    Assert.AreEqual("/oauth2/token", context.Request.Uri.PathAndQuery);
+                var accessToken = await client.RefreshAccessTokenAsync("testAccessToken1");
 
-                    var formCollection = await context.Request.ReadFormAsync();
-
-                    Assert.AreEqual("refresh_token", formCollection["grant_type"]);
-                    Assert.AreEqual("testClientId", formCollection["client_id"]);
-                    Assert.AreEqual("testClientSecret", formCollection["client_secret"]);
-                    Assert.AreEqual("testAccessToken1", formCollection["refresh_token"]);
-
-                    await context.Response.WriteAsync(
-                        @"{
-                            'access_token': 'testAccessToken2',
-                            'client_id': 'client_id',
-                            'expires_in': 21600,
-                            'refresh_token': 'testRefreshToken2',
-                            'token_type': 'Bearer',
-                            'user_id': 'testUserId'
-                        }"
-                    );
-                });
-            }))
-            {
-                using (var client = new Monzo.MonzoAuthorizationClient(server.HttpClient, "testClientId", "testClientSecret"))
-                {
-                    var accessToken = await client.RefreshAccessTokenAsync("testAccessToken1");
-
-                    Assert.AreEqual("testAccessToken2", accessToken.Value);
-                    Assert.AreEqual("testRefreshToken2", accessToken.RefreshToken);
-                    Assert.AreEqual(21600, accessToken.ExpiresIn);
-                }
+                Assert.AreEqual("testAccessToken2", accessToken.Value);
+                Assert.AreEqual("testRefreshToken2", accessToken.RefreshToken);
+                Assert.AreEqual(21600, accessToken.ExpiresIn);
             }
+
+
+            Assert.AreEqual("/oauth2/token", fakeMessageHandler.Request.RequestUri.PathAndQuery);
+
+            var formCollection = await fakeMessageHandler.GetQueryStringAsync();
+
+            Assert.AreEqual("refresh_token", formCollection["grant_type"]);
+            Assert.AreEqual("testClientId", formCollection["client_id"]);
+            Assert.AreEqual("testClientSecret", formCollection["client_secret"]);
+            Assert.AreEqual("testAccessToken1", formCollection["refresh_token"]);
         }
     }
 }
