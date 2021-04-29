@@ -11,8 +11,8 @@
     <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
     <Description>Monzo.NET is a .NET client library for the Monzo bank HTTP API. Use it to build apps and view your accounts, balances and transactions, create feed items, manage webhooks and attachments, and more! https://monzo.com/</Description>
     <PackageTags>monzo monzobank mondo mondobank bank api</PackageTags>
-    <PackageLicenseUrl>https://gitlab.com/JoeEcob/monzo.net/raw/dev/LICENSE</PackageLicenseUrl>
-    <PackageProjectUrl>https://gitlab.com/JoeEcob/monzo.net</PackageProjectUrl>
+    <PackageLicenseUrl>https://github.com/JoeEcob/monzo.net/raw/dev/LICENSE</PackageLicenseUrl>
+    <PackageProjectUrl>https://github.com/JoeEcob/monzo.net</PackageProjectUrl>
     <PackageIconUrl>https://twitter.com/monzo/profile_image?size=original</PackageIconUrl>
   </PropertyGroup>
 

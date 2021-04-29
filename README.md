@@ -2,7 +2,7 @@
 
 ![Monzo](https://twitter.com/monzo/profile_image?size=original)
 
-[![NuGet version](https://img.shields.io/nuget/v/Monzo.svg)](http://nuget.org/List/Packages/Monzo)  [![NuGet downloads](https://img.shields.io/nuget/dt/Monzo.svg)](http://nuget.org/List/Packages/Monzo)  [![Build status](https://ci.appveyor.com/api/projects/status/t48u8w4ycf4y93b9?svg=true)](https://ci.appveyor.com/project/JoeEcob/monzo-net)  [![License](http://img.shields.io/:license-MIT-blue.svg)](https://gitlab.com/JoeEcob/monzo.net/raw/dev/LICENSE)
+[![NuGet version](https://img.shields.io/nuget/v/Monzo.svg)](http://nuget.org/List/Packages/Monzo)  [![NuGet downloads](https://img.shields.io/nuget/dt/Monzo.svg)](http://nuget.org/List/Packages/Monzo)  [![Build status](https://ci.appveyor.com/api/projects/status/t48u8w4ycf4y93b9?svg=true)](https://ci.appveyor.com/project/JoeEcob/monzo-net)  [![License](http://img.shields.io/:license-MIT-blue.svg)](https://github.com/JoeEcob/monzo.net/raw/dev/LICENSE)
 
 Monzo.NET is a .NET client library for the [Monzo bank API](https://monzo.com/docs/). Use it to build apps and view your accounts, balances and transactions, create feed items, manage webhooks and attachments, and more!
 
@@ -41,7 +41,7 @@ public class HomeController : Controller
     public ActionResult Login()
     {
         // an unguessable random string which is used to protect against cross-site request forgery attacks
-        string state = ...; 
+        string state = ...;
 
         // the URL the user should be redirected back to following a successful Monzo login
         string redirectUrl = Url.Action("OAuthCallback", "Home", null, Request.Url.Scheme);
@@ -57,10 +57,10 @@ public class HomeController : Controller
     {
         // confirm the redirect url was valid
         string redirectUrl = Url.Action("OAuthCallback", "Home", null, Request.Url.Scheme);
-    
+
         // 2. Exchange authorization code for access token
         AccessToken accessToken = await _authClient.GetAccessTokenAsync(code, redirectUrl);
-            
+
         // 3. Begin fetching accounts, transactions etc
         using (var client = new MonzoClient(accessToken.Value))
         {
@@ -69,7 +69,7 @@ public class HomeController : Controller
             // ... etc
         }
     }
-} 
+}
 ```
 
 ##### Validating your API token
