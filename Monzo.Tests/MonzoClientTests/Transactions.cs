@@ -28,7 +28,7 @@
                             'metadata': {},
                             'notes': 'Salmon sandwich 🍞',
                             'is_load': false,
-                            'settled': true,
+                            'settled': '2020-11-28T04:15:33.962Z',
                             'category': 'eating_out'
                         },
                         {
@@ -42,7 +42,7 @@
                             'metadata': {},
                             'notes': '',
                             'is_load': false,
-                            'settled': true,
+                            'settled': '2020-11-28T04:15:33.962Z',
                             'category': 'eating_out'
                         },
                     ]
@@ -68,7 +68,7 @@
                 Assert.AreEqual("eating_out", transactions[0].Category);
             }
 
-            Assert.AreEqual("/transactions?account_id=1", fakeMessageHandler.Request.RequestUri.PathAndQuery);
+            Assert.That(fakeMessageHandler.Request.RequestUri.PathAndQuery.StartsWith("/transactions?account_id=1"));
 
             Assert.AreEqual("Bearer testAccessToken", fakeMessageHandler.Request.Headers.Authorization.ToString());
         }
@@ -90,7 +90,7 @@
                             'metadata': {},
                             'notes': 'Salmon sandwich 🍞',
                             'is_load': false,
-                            'settled': true,
+                            'settled': '2020-11-28T04:15:33.962Z',
                             'category': 'eating_out'
                         },
                         {
@@ -104,7 +104,7 @@
                             'metadata': {},
                             'notes': '',
                             'is_load': false,
-                            'settled': true,
+                            'settled': '2020-11-28T04:15:33.962Z',
                             'category': 'eating_out'
                         },
                     ]
@@ -129,7 +129,7 @@
                 Assert.AreEqual("eating_out", transactions[0].Category);
             }
 
-            Assert.AreEqual("/transactions?account_id=1&limit=40&since=2015-04-05T18:01:32Z&before=2015-12-25T18:01:32Z", fakeMessageHandler.Request.RequestUri.PathAndQuery);
+            Assert.That(fakeMessageHandler.Request.RequestUri.PathAndQuery.StartsWith("/transactions?account_id=1&limit=40&since=2015-04-05T18:01:32Z&before=2015-12-25T18:01:32Z"));
 
             Assert.AreEqual("Bearer testAccessToken", fakeMessageHandler.Request.Headers.Authorization.ToString());
         }
@@ -150,7 +150,7 @@
                         'metadata': {},
                         'notes': 'Salmon sandwich 🍞',
                         'is_load': false,
-                        'settled': true
+                        'settled': '2020-11-28T04:15:33.962Z',
                     }
                 }");
 
@@ -210,7 +210,7 @@
                         'metadata': {},
                         'notes': 'Salmon sandwich 🍞',
                         'is_load': false,
-                        'settled': true
+                        'settled': '2020-11-28T04:15:33.962Z',
                     }
                 }");
 
@@ -332,7 +332,7 @@
                         },
                         'notes': '',
                         'is_load': false,
-                        'settled': true,
+                        'settled': '2020-11-28T04:15:33.962Z',
                         'category': 'eating_out'
                     }
                 }");
