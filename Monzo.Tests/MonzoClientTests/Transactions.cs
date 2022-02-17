@@ -112,7 +112,7 @@
 
             using (var client = new MonzoClient(httpClient, "testAccessToken"))
             {
-                var transactions = await client.GetTransactionsAsync("1", null, null, new PaginationOptions { SinceTime = new DateTime(2015, 4, 5, 18, 1, 32, DateTimeKind.Utc), Limit = 40, BeforeTime = new DateTime(2015, 12, 25, 18, 1, 32, DateTimeKind.Utc) });
+                var transactions = await client.GetTransactionsAsync("1", null, new PaginationOptions { SinceTime = new DateTime(2015, 4, 5, 18, 1, 32, DateTimeKind.Utc), Limit = 40, BeforeTime = new DateTime(2015, 12, 25, 18, 1, 32, DateTimeKind.Utc) });
 
                 Assert.AreEqual(2, transactions.Count);
 

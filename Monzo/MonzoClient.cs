@@ -124,23 +124,15 @@ namespace Monzo
         /// <param name="accountId">The account to retrieve transactions from.</param>
         /// <param name="expand">Can be merchant.</param>
         /// <param name="paginationOptions">This endpoint can be paginated.</param>
-        public async Task<IList<Transaction>> GetTransactionsAsync(string accountId, string expand = null, DateTime? since = null, PaginationOptions paginationOptions = null)
+        public async Task<IList<Transaction>> GetTransactionsAsync(string accountId, string expand = null, PaginationOptions paginationOptions = null)
         {
             if (accountId == null) throw new ArgumentNullException(nameof(accountId));
 
             var sb = new StringBuilder($"transactions?account_id={accountId}{paginationOptions}");
-            if (since.HasValue)
-            {
-                sb.Append($"&since={since.Value.ToUniversalTime():o}");
-            }
             if (expand != null)
             {
                 sb.Append($"&expand[]={expand}");
             }
-
-            // Monzo helpfully made this a requirement silently on 2021-04-19, thanks Monzo.
-            var before = DateTime.UtcNow;
-            sb.Append($"&before={before.ToUniversalTime():o}");
 
             HttpResponseMessage response = await _httpClient.GetAsync(sb.ToString());
             string body = await response.Content.ReadAsStringAsync();
