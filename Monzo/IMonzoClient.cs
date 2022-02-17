@@ -45,8 +45,10 @@ namespace Monzo
         /// </summary>
         /// <param name="accountId">The account to retrieve transactions from.</param>
         /// <param name="expand">Can be merchant.</param>
+        /// <param name="since">Date since.</param>
         /// <param name="paginationOptions">This endpoint can be paginated.</param>
-        Task<IList<Transaction>> GetTransactionsAsync(string accountId, string expand = null, PaginationOptions paginationOptions = null);
+        /// <returns>A Task&lt;Task`1&gt; representing the asynchronous operation.</returns>
+        Task<IList<Transaction>> GetTransactionsAsync(string accountId, string expand = null, DateTime? since = null, PaginationOptions paginationOptions = null);
 
         /// <summary>
         /// You may store your own key-value annotations against a transaction in its metadata.
