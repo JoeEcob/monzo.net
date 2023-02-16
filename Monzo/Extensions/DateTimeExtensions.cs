@@ -1,12 +1,11 @@
 ﻿using System;
 
-namespace Monzo.Extensions
+namespace Monzo.Extensions;
+
+internal static class DateTimeExtensions
 {
-    internal static class DateTimeExtensions
+    public static string ToRfc3339String(this DateTime dateTime)
     {
-        public static string ToRfc3339String(this DateTime dateTime)
-        {
-            return dateTime.ToUniversalTime().ToString("yyyy'-'MM'-'dd'T'HH':'mm':'ss'Z'");
-        }
+        return dateTime.ToUniversalTime().ToString("yyyy'-'MM'-'dd'T'HH':'mm':'ss'Z'");
     }
 }

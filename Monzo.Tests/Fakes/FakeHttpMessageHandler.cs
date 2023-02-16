@@ -1,41 +1,39 @@
-﻿namespace Monzo.Tests.Fakes
+﻿namespace Monzo.Tests.Fakes;
+
+using System.Collections.Specialized;
+using System.Net;
+using System.Net.Http;
+using System.Threading;
+using System.Threading.Tasks;
+using System.Web;
+
+internal class FakeHttpMessageHandler : HttpMessageHandler
 {
-    using System.Collections.Generic;
-    using System.Collections.Specialized;
-    using System.Net;
-    using System.Net.Http;
-    using System.Threading;
-    using System.Threading.Tasks;
-    using System.Web;
+    private readonly HttpStatusCode _statusCode;
+    private readonly string _responseContent;
 
-    internal class FakeHttpMessageHandler : HttpMessageHandler
+    public HttpRequestMessage Request;
+
+    public FakeHttpMessageHandler(HttpStatusCode statusCode, string responseContent)
     {
-        private readonly HttpStatusCode _statusCode;
-        private readonly string _responseContent;
+        _statusCode = statusCode;
+        _responseContent = responseContent;
+    }
 
-        public HttpRequestMessage Request;
+    protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+    {
+        Request = request;
 
-        public FakeHttpMessageHandler(HttpStatusCode statusCode, string responseContent)
+        return Task.FromResult(new HttpResponseMessage()
         {
-            _statusCode = statusCode;
-            _responseContent = responseContent;
-        }
+            StatusCode = _statusCode,
+            Content = new StringContent(_responseContent)
+        });
+    }
 
-        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
-        {
-            Request = request;
-
-            return Task.FromResult(new HttpResponseMessage()
-            {
-                StatusCode = _statusCode,
-                Content = new StringContent(_responseContent)
-            });
-        }
-
-        public async Task<NameValueCollection> GetQueryStringAsync()
-        {
-            var content = await Request.Content.ReadAsStringAsync();
-            return HttpUtility.ParseQueryString(content);
-        }
+    public async Task<NameValueCollection> GetQueryStringAsync()
+    {
+        var content = await Request.Content!.ReadAsStringAsync();
+        return HttpUtility.ParseQueryString(content);
     }
 }
