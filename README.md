@@ -12,7 +12,7 @@ Monzo.NET is a .NET client library for the [Monzo bank API](https://monzo.com/do
 Install-Package Monzo
 ```
 
-Supported target frameworks: .Net Core, .NET 4.5, ASP.NET Core 5.0, Windows 8, Windows Phone 8.1
+Supported target frameworks: [.NET Standard 2.0](https://learn.microsoft.com/en-us/dotnet/standard/net-standard?tabs=net-standard-2-0), [.NET Standard 2.1](https://learn.microsoft.com/en-us/dotnet/standard/net-standard?tabs=net-standard-2-1)
 
 ### Supported Features
 
