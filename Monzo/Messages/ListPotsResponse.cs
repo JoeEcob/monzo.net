@@ -1,11 +1,10 @@
 ﻿using System.Collections.Generic;
 using Newtonsoft.Json;
 
-namespace Monzo.Messages
+namespace Monzo.Messages;
+
+internal sealed class ListPotsResponse
 {
-    internal sealed class ListPotsResponse
-    {
-        [JsonProperty("pots")]
-        public IList<Pot> Pots { get; set; }
-    }
+    [JsonProperty("pots")]
+    public IList<Pot> Pots { get; set; }
 }

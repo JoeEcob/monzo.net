@@ -1,10 +1,9 @@
 using Newtonsoft.Json;
 
-namespace Monzo.Messages
+namespace Monzo.Messages;
+
+internal sealed class RegisterWebhookResponse
 {
-    internal sealed class RegisterWebhookResponse
-    {
-        [JsonProperty("webhook")]
-        public Webhook Webhook { get; set; }
-    }
+    [JsonProperty("webhook")]
+    public Webhook Webhook { get; set; }
 }

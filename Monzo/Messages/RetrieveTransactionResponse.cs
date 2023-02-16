@@ -1,10 +1,9 @@
 using Newtonsoft.Json;
 
-namespace Monzo.Messages
+namespace Monzo.Messages;
+
+internal sealed class RetrieveTransactionResponse
 {
-    internal sealed class RetrieveTransactionResponse
-    {
-        [JsonProperty("transaction")]
-        public Transaction Transaction { get; set; }
-    }
+    [JsonProperty("transaction")]
+    public Transaction Transaction { get; set; }
 }

@@ -9,468 +9,473 @@ using System.Threading.Tasks;
 using Monzo.Messages;
 using Newtonsoft.Json;
 
-namespace Monzo
+namespace Monzo;
+
+/// <summary>
+/// An authenticated Monzo API client.
+/// </summary>
+public sealed class MonzoClient : IMonzoClient
 {
+    private readonly HttpClient _httpClient;
+
     /// <summary>
-    /// An authenticated Monzo API client.
+    /// Initializes a new instance of the <see cref="MonzoClient"/> class.
     /// </summary>
-    public sealed class MonzoClient : IMonzoClient
+    /// <param name="baseUri">URL of the Monzo API to use, defaults to production.</param>
+    /// <param name="accessToken">Your access token.</param>
+    public MonzoClient(string accessToken, string baseUri = "https://api.monzo.com")
+        : this(new HttpClient { BaseAddress = new Uri(baseUri) }, accessToken)
     {
-        private readonly HttpClient _httpClient;
+    }
 
-        /// <summary>
-        /// Initializes a new instance of the <see cref="MonzoClient"/> class.
-        /// </summary>
-        /// <param name="baseUri">URL of the Monzo API to use, defaults to production.</param>
-        /// <param name="accessToken">Your access token.</param>
-        public MonzoClient(string accessToken, string baseUri = "https://api.monzo.com")
-            : this(new HttpClient {BaseAddress = new Uri(baseUri)}, accessToken)
+    internal MonzoClient(HttpClient httpClient, string accessToken)
+    {
+        if (httpClient == null) throw new ArgumentNullException(nameof(httpClient));
+
+        _httpClient = httpClient;
+        _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+    }
+
+    /// <summary>
+    /// Your OAuth 2.0 access token.
+    /// </summary>
+    public string AccessToken => _httpClient.DefaultRequestHeaders.Authorization?.Parameter;
+
+    /// <summary>
+    /// Returns information about the current access token.
+    /// </summary>
+    public async Task<WhoAmI> WhoAmIAsync()
+    {
+        HttpResponseMessage response = await _httpClient.GetAsync($"ping/whoami");
+        string body = await response.Content.ReadAsStringAsync();
+
+        if (!response.IsSuccessStatusCode)
         {
+            throw MonzoException.CreateFromApiResponse(response, body);
         }
 
-        internal MonzoClient(HttpClient httpClient, string accessToken)
-        {
-            if (httpClient == null) throw new ArgumentNullException(nameof(httpClient));
+        return JsonConvert.DeserializeObject<WhoAmI>(body);
+    }
 
-            _httpClient = httpClient;
-            _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+    /// <summary>
+    /// Returns a list of accounts owned by the currently authorised user.
+    /// </summary>
+    public async Task<IList<Account>> GetAccountsAsync()
+    {
+        HttpResponseMessage response = await _httpClient.GetAsync($"accounts");
+        string body = await response.Content.ReadAsStringAsync();
+
+        if (!response.IsSuccessStatusCode)
+        {
+            throw MonzoException.CreateFromApiResponse(response, body);
         }
 
-        /// <summary>
-        /// Your OAuth 2.0 access token.
-        /// </summary>
-        public string AccessToken => _httpClient.DefaultRequestHeaders.Authorization?.Parameter;
+        return JsonConvert.DeserializeObject<ListAccountsResponse>(body).Accounts;
+    }
 
-        /// <summary>
-        /// Returns information about the current access token.
-        /// </summary>
-        public async Task<WhoAmI> WhoAmIAsync()
+    /// <summary>
+    /// Returns balance information for a specific account.
+    /// </summary>
+    /// <param name="accountId">The id of the account.</param>
+    public async Task<Balance> GetBalanceAsync(string accountId)
+    {
+        if (accountId == null) throw new ArgumentNullException(nameof(accountId));
+
+        HttpResponseMessage response = await _httpClient.GetAsync($"balance?account_id={accountId}");
+        string body = await response.Content.ReadAsStringAsync();
+
+        if (!response.IsSuccessStatusCode)
         {
-            HttpResponseMessage response = await _httpClient.GetAsync($"ping/whoami");
-            string body = await response.Content.ReadAsStringAsync();
-
-            if (!response.IsSuccessStatusCode)
-            {
-                throw MonzoException.CreateFromApiResponse(response, body);
-            }
-
-            return JsonConvert.DeserializeObject<WhoAmI>(body);
+            throw MonzoException.CreateFromApiResponse(response, body);
         }
 
-        /// <summary>
-        /// Returns a list of accounts owned by the currently authorised user.
-        /// </summary>
-        public async Task<IList<Account>> GetAccountsAsync()
+        return JsonConvert.DeserializeObject<Balance>(body);
+    }
+
+    /// <summary>
+    /// Returns an individual transaction, fetched by its id.
+    /// </summary>
+    /// <param name="transactionId">The transaction ID.</param>
+    /// <param name="expand">Can be merchant.</param>
+    public async Task<Transaction> GetTransactionAsync(string transactionId, string expand = null)
+    {
+        if (transactionId == null) throw new ArgumentNullException(nameof(transactionId));
+
+        var sb = new StringBuilder($"transactions/{transactionId}");
+        if (!string.IsNullOrWhiteSpace(expand))
         {
-            HttpResponseMessage response = await _httpClient.GetAsync($"accounts");
-            string body = await response.Content.ReadAsStringAsync();
-
-            if (!response.IsSuccessStatusCode)
-            {
-                throw MonzoException.CreateFromApiResponse(response, body);
-            }
-
-            return JsonConvert.DeserializeObject<ListAccountsResponse>(body).Accounts;
+            sb.Append($"?expand[]={expand}");
         }
 
-        /// <summary>
-        /// Returns balance information for a specific account.
-        /// </summary>
-        /// <param name="accountId">The id of the account.</param>
-        public async Task<Balance> GetBalanceAsync(string accountId)
+        HttpResponseMessage response = await _httpClient.GetAsync(sb.ToString());
+        string body = await response.Content.ReadAsStringAsync();
+
+        if (!response.IsSuccessStatusCode)
         {
-            if (accountId == null) throw new ArgumentNullException(nameof(accountId));
-
-            HttpResponseMessage response = await _httpClient.GetAsync($"balance?account_id={accountId}");
-            string body = await response.Content.ReadAsStringAsync();
-
-            if (!response.IsSuccessStatusCode)
-            {
-                throw MonzoException.CreateFromApiResponse(response, body);
-            }
-
-            return JsonConvert.DeserializeObject<Balance>(body);
+            throw MonzoException.CreateFromApiResponse(response, body);
         }
 
-        /// <summary>
-        /// Returns an individual transaction, fetched by its id.
-        /// </summary>
-        /// <param name="transactionId">The transaction ID.</param>
-        /// <param name="expand">Can be merchant.</param>
-        public async Task<Transaction> GetTransactionAsync(string transactionId, string expand = null)
+        return JsonConvert.DeserializeObject<RetrieveTransactionResponse>(body).Transaction;
+    }
+
+    /// <summary>
+    /// Returns a list of transactions on the user’s account.
+    /// </summary>
+    /// <param name="accountId">The account to retrieve transactions from.</param>
+    /// <param name="expand">Can be merchant.</param>
+    /// <param name="paginationOptions">This endpoint can be paginated.</param>
+    public async Task<IList<Transaction>> GetTransactionsAsync(string accountId, string expand = null, PaginationOptions paginationOptions = null)
+    {
+        if (accountId == null) throw new ArgumentNullException(nameof(accountId));
+
+        var sb = new StringBuilder($"transactions?account_id={accountId}{paginationOptions}");
+        if (expand != null)
         {
-            if (transactionId == null) throw new ArgumentNullException(nameof(transactionId));
-
-            var sb = new StringBuilder($"transactions/{transactionId}");
-            if (!string.IsNullOrWhiteSpace(expand))
-            {
-                sb.Append($"?expand[]={expand}");
-            }
-
-            HttpResponseMessage response = await _httpClient.GetAsync(sb.ToString());
-            string body = await response.Content.ReadAsStringAsync();
-
-            if (!response.IsSuccessStatusCode)
-            {
-                throw MonzoException.CreateFromApiResponse(response, body);
-            }
-
-            return JsonConvert.DeserializeObject<RetrieveTransactionResponse>(body).Transaction;
+            sb.Append($"&expand[]={expand}");
         }
 
-        /// <summary>
-        /// Returns a list of transactions on the user’s account.
-        /// </summary>
-        /// <param name="accountId">The account to retrieve transactions from.</param>
-        /// <param name="expand">Can be merchant.</param>
-        /// <param name="paginationOptions">This endpoint can be paginated.</param>
-        public async Task<IList<Transaction>> GetTransactionsAsync(string accountId, string expand = null, PaginationOptions paginationOptions = null)
+        HttpResponseMessage response = await _httpClient.GetAsync(sb.ToString());
+        string body = await response.Content.ReadAsStringAsync();
+
+        if (!response.IsSuccessStatusCode)
         {
-            if (accountId == null) throw new ArgumentNullException(nameof(accountId));
-
-            var sb = new StringBuilder($"transactions?account_id={accountId}{paginationOptions}");
-            if (expand != null)
-            {
-                sb.Append($"&expand[]={expand}");
-            }
-
-            HttpResponseMessage response = await _httpClient.GetAsync(sb.ToString());
-            string body = await response.Content.ReadAsStringAsync();
-
-            if (!response.IsSuccessStatusCode)
-            {
-                throw MonzoException.CreateFromApiResponse(response, body);
-            }
-
-            return JsonConvert.DeserializeObject<ListTransactionsResponse>(body).Transactions;
+            throw MonzoException.CreateFromApiResponse(response, body);
         }
 
-        /// <summary>
-        /// You may store your own key-value annotations against a transaction in its metadata.
-        /// </summary>
-        /// <param name="transactionId"></param>
-        /// <param name="metadata">Include each key you would like to modify. To delete a key, set its value to an empty string.</param>
-        /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
-        /// <remarks>Metadata is private to your application.</remarks>
-        public async Task<Transaction> AnnotateTransactionAsync(string transactionId, IDictionary<string, string> metadata, CancellationToken cancellationToken = default(CancellationToken))
+        return JsonConvert.DeserializeObject<ListTransactionsResponse>(body).Transactions;
+    }
+
+    /// <summary>
+    /// You may store your own key-value annotations against a transaction in its metadata.
+    /// </summary>
+    /// <param name="transactionId"></param>
+    /// <param name="metadata">Include each key you would like to modify. To delete a key, set its value to an empty string.</param>
+    /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
+    /// <remarks>Metadata is private to your application.</remarks>
+    public async Task<Transaction> AnnotateTransactionAsync(string transactionId, IDictionary<string, string> metadata,
+        CancellationToken cancellationToken = default(CancellationToken))
+    {
+        if (transactionId == null) throw new ArgumentNullException(nameof(transactionId));
+        if (metadata == null) throw new ArgumentNullException(nameof(metadata));
+
+        var formValues = new Dictionary<string, string>();
+        foreach (var pair in metadata)
         {
-            if (transactionId == null) throw new ArgumentNullException(nameof(transactionId));
-            if (metadata == null) throw new ArgumentNullException(nameof(metadata));
-
-            var formValues = new Dictionary<string, string>();
-            foreach (var pair in metadata)
-            {
-                formValues.Add($"metadata[{pair.Key}]", pair.Value);
-            }
-
-            var httpRequestMessage = new HttpRequestMessage(new HttpMethod("PATCH"), $"transactions/{transactionId}")
-            {
-                Content = new FormUrlEncodedContent(formValues)
-            };
-
-            HttpResponseMessage response = await _httpClient.SendAsync(httpRequestMessage, cancellationToken);
-            string body = await response.Content.ReadAsStringAsync();
-
-            if (!response.IsSuccessStatusCode)
-            {
-                throw MonzoException.CreateFromApiResponse(response, body);
-            }
-
-            return JsonConvert.DeserializeObject<AnnotateTransactionResponse>(body).Transaction;
+            formValues.Add($"metadata[{pair.Key}]", pair.Value);
         }
 
-        /// <summary>
-        /// Creates a new feed item on the user’s feed.
-        /// </summary>
-        /// <param name="accountId">The account to create feed item for.</param>
-        /// <param name="type">Type of feed item. Currently only basic is supported.</param>
-        /// <param name="params">A map of parameters which vary based on type</param>
-        /// <param name="url">A URL to open when the feed item is tapped. If no URL is provided, the app will display a fallback view based on the title &amp; body.</param>
-        /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
-        public async Task CreateFeedItemAsync(string accountId, string type, IDictionary<string, string> @params, string url = null, CancellationToken cancellationToken = default(CancellationToken))
+        var httpRequestMessage = new HttpRequestMessage(new HttpMethod("PATCH"), $"transactions/{transactionId}")
         {
-            if (accountId == null) throw new ArgumentNullException(nameof(accountId));
-            if (type == null) throw new ArgumentNullException(nameof(type));
-            if (@params == null) throw new ArgumentNullException(nameof(@params));
+            Content = new FormUrlEncodedContent(formValues)
+        };
 
-            var formValues = new Dictionary<string, string>
-            {
-                {"account_id", accountId},
-                {"type", "basic"}
-            };
+        HttpResponseMessage response = await _httpClient.SendAsync(httpRequestMessage, cancellationToken);
+        string body = await response.Content.ReadAsStringAsync();
 
-            if (!string.IsNullOrWhiteSpace(url))
-            {
-                formValues.Add("url", url);
-            }
-
-            foreach (var pair in @params)
-            {
-                formValues.Add($"params[{pair.Key}]", pair.Value);
-            }
-
-            HttpResponseMessage response = await _httpClient.PostAsync("feed", new FormUrlEncodedContent(formValues), cancellationToken);
-            string body = await response.Content.ReadAsStringAsync();
-
-            if (!response.IsSuccessStatusCode)
-            {
-                throw MonzoException.CreateFromApiResponse(response, body);
-            }
+        if (!response.IsSuccessStatusCode)
+        {
+            throw MonzoException.CreateFromApiResponse(response, body);
         }
 
-        /// <summary>
-        /// Each time a matching event occurs, we will make a POST call to the URL you provide. If the call fails, we will retry up to a maximum of 5 attempts, with exponential backoff.
-        /// </summary>
-        /// <param name="accountId">The account to receive notifications for.</param>
-        /// <param name="url">The URL we will send notifications to.</param>
-        /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
-        public async Task<Webhook> CreateWebhookAsync(string accountId, string url, CancellationToken cancellationToken = default(CancellationToken))
+        return JsonConvert.DeserializeObject<AnnotateTransactionResponse>(body).Transaction;
+    }
+
+    /// <summary>
+    /// Creates a new feed item on the user’s feed.
+    /// </summary>
+    /// <param name="accountId">The account to create feed item for.</param>
+    /// <param name="type">Type of feed item. Currently only basic is supported.</param>
+    /// <param name="params">A map of parameters which vary based on type</param>
+    /// <param name="url">A URL to open when the feed item is tapped. If no URL is provided, the app will display a fallback view based on the title &amp; body.</param>
+    /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
+    public async Task CreateFeedItemAsync(string accountId, string type, IDictionary<string, string> @params, string url = null,
+        CancellationToken cancellationToken = default(CancellationToken))
+    {
+        if (accountId == null) throw new ArgumentNullException(nameof(accountId));
+        if (type == null) throw new ArgumentNullException(nameof(type));
+        if (@params == null) throw new ArgumentNullException(nameof(@params));
+
+        var formValues = new Dictionary<string, string>
         {
-            if (accountId == null) throw new ArgumentNullException(nameof(accountId));
-            if (url == null) throw new ArgumentNullException(nameof(url));
+            { "account_id", accountId },
+            { "type", "basic" }
+        };
 
-            var formValues = new Dictionary<string, string>
-            {
-                {"account_id", accountId},
-                {"url", url}
-            };
-
-            HttpResponseMessage response = await _httpClient.PostAsync("webhooks", new FormUrlEncodedContent(formValues), cancellationToken);
-            string body = await response.Content.ReadAsStringAsync();
-
-            if (!response.IsSuccessStatusCode)
-            {
-                throw MonzoException.CreateFromApiResponse(response, body);
-            }
-
-            return JsonConvert.DeserializeObject<RegisterWebhookResponse>(body).Webhook;
+        if (!string.IsNullOrWhiteSpace(url))
+        {
+            formValues.Add("url", url);
         }
 
-        /// <summary>
-        /// List the web hooks registered on an account.
-        /// </summary>
-        /// <param name="accountId">The account to list registered web hooks for.</param>
-        public async Task<IList<Webhook>> GetWebhooksAsync(string accountId)
+        foreach (var pair in @params)
         {
-            if (accountId == null) throw new ArgumentNullException(nameof(accountId));
-
-            HttpResponseMessage response = await _httpClient.GetAsync($"webhooks?account_id={accountId}");
-            string body = await response.Content.ReadAsStringAsync();
-
-            if (!response.IsSuccessStatusCode)
-            {
-                throw MonzoException.CreateFromApiResponse(response, body);
-            }
-
-            return JsonConvert.DeserializeObject<ListWebhooksResponse>(body).Webhooks;
+            formValues.Add($"params[{pair.Key}]", pair.Value);
         }
 
-        /// <summary>
-        /// When you delete a web hook, we will no longer send notifications to it.
-        /// </summary>
-        /// <param name="webhookId">The id of the webhook to delete.</param>
-        /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
-        public async Task DeleteWebhookAsync(string webhookId, CancellationToken cancellationToken = default(CancellationToken))
-        {
-            if (webhookId == null) throw new ArgumentNullException(nameof(webhookId));
+        HttpResponseMessage response = await _httpClient.PostAsync("feed", new FormUrlEncodedContent(formValues), cancellationToken);
+        string body = await response.Content.ReadAsStringAsync();
 
-            await _httpClient.DeleteAsync($"webhooks/{webhookId}", cancellationToken);
+        if (!response.IsSuccessStatusCode)
+        {
+            throw MonzoException.CreateFromApiResponse(response, body);
+        }
+    }
+
+    /// <summary>
+    /// Each time a matching event occurs, we will make a POST call to the URL you provide. If the call fails, we will retry up to a maximum of 5 attempts, with exponential backoff.
+    /// </summary>
+    /// <param name="accountId">The account to receive notifications for.</param>
+    /// <param name="url">The URL we will send notifications to.</param>
+    /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
+    public async Task<Webhook> CreateWebhookAsync(string accountId, string url, CancellationToken cancellationToken = default(CancellationToken))
+    {
+        if (accountId == null) throw new ArgumentNullException(nameof(accountId));
+        if (url == null) throw new ArgumentNullException(nameof(url));
+
+        var formValues = new Dictionary<string, string>
+        {
+            { "account_id", accountId },
+            { "url", url }
+        };
+
+        HttpResponseMessage response = await _httpClient.PostAsync("webhooks", new FormUrlEncodedContent(formValues), cancellationToken);
+        string body = await response.Content.ReadAsStringAsync();
+
+        if (!response.IsSuccessStatusCode)
+        {
+            throw MonzoException.CreateFromApiResponse(response, body);
         }
 
+        return JsonConvert.DeserializeObject<RegisterWebhookResponse>(body).Webhook;
+    }
 
-        /// <summary>
-        /// Once you have obtained a URL for an attachment, either by uploading to the upload_url obtained from the upload endpoint above or by hosting a remote image, this URL can then be registered against a transaction. Once an attachment is registered against a transaction this will be displayed on the detail page of a transaction within the Monzo app.
-        /// </summary>
-        /// <param name="externalId">The id of the transaction to associate the attachment with.</param>
-        /// <param name="fileUrl">The URL of the uploaded attachment.</param>
-        /// <param name="fileType">The content type of the attachment.</param>
-        /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
-        public async Task<Attachment> CreateAttachmentAsync(string externalId, string fileUrl, string fileType, CancellationToken cancellationToken = default(CancellationToken))
+    /// <summary>
+    /// List the web hooks registered on an account.
+    /// </summary>
+    /// <param name="accountId">The account to list registered web hooks for.</param>
+    public async Task<IList<Webhook>> GetWebhooksAsync(string accountId)
+    {
+        if (accountId == null) throw new ArgumentNullException(nameof(accountId));
+
+        HttpResponseMessage response = await _httpClient.GetAsync($"webhooks?account_id={accountId}");
+        string body = await response.Content.ReadAsStringAsync();
+
+        if (!response.IsSuccessStatusCode)
         {
-            if (externalId == null) throw new ArgumentNullException(nameof(externalId));
-            if (fileUrl == null) throw new ArgumentNullException(nameof(fileUrl));
-            if (fileType == null) throw new ArgumentNullException(nameof(fileType));
-            
-            var formValues = new Dictionary<string, string>
-            {
-                {"external_id", externalId},
-                {"file_type", fileType},
-                {"file_url", fileUrl}
-            };
-
-            HttpResponseMessage response = await _httpClient.PostAsync("attachment/register", new FormUrlEncodedContent(formValues), cancellationToken);
-            string body = await response.Content.ReadAsStringAsync();
-
-            if (!response.IsSuccessStatusCode)
-            {
-                throw MonzoException.CreateFromApiResponse(response, body);
-            }
-
-            return JsonConvert.DeserializeObject<RegisterAttachmentResponse>(body).Attachment;
+            throw MonzoException.CreateFromApiResponse(response, body);
         }
 
-        /// <summary>
-        /// Uploads an attachment from a file stream.
-        /// </summary>
-        /// <param name="filename">The name of the file to be uploaded</param>
-        /// <param name="fileType">The content type of the file</param>
-        /// <param name="externalId">The id of the transaction to associate the attachment with.</param>
-        /// <param name="stream">The file stream.</param>
-        /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
-        public async Task<Attachment> UploadAttachmentAsync(string filename, string fileType, string externalId, Stream stream, CancellationToken cancellationToken = default(CancellationToken))
+        return JsonConvert.DeserializeObject<ListWebhooksResponse>(body).Webhooks;
+    }
+
+    /// <summary>
+    /// When you delete a web hook, we will no longer send notifications to it.
+    /// </summary>
+    /// <param name="webhookId">The id of the webhook to delete.</param>
+    /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
+    public async Task DeleteWebhookAsync(string webhookId, CancellationToken cancellationToken = default(CancellationToken))
+    {
+        if (webhookId == null) throw new ArgumentNullException(nameof(webhookId));
+
+        await _httpClient.DeleteAsync($"webhooks/{webhookId}", cancellationToken);
+    }
+
+
+    /// <summary>
+    /// Once you have obtained a URL for an attachment, either by uploading to the upload_url obtained from the upload endpoint above or by hosting a remote image, this URL can then be registered against a transaction. Once an attachment is registered against a transaction this will be displayed on the detail page of a transaction within the Monzo app.
+    /// </summary>
+    /// <param name="externalId">The id of the transaction to associate the attachment with.</param>
+    /// <param name="fileUrl">The URL of the uploaded attachment.</param>
+    /// <param name="fileType">The content type of the attachment.</param>
+    /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
+    public async Task<Attachment> CreateAttachmentAsync(string externalId, string fileUrl, string fileType,
+        CancellationToken cancellationToken = default(CancellationToken))
+    {
+        if (externalId == null) throw new ArgumentNullException(nameof(externalId));
+        if (fileUrl == null) throw new ArgumentNullException(nameof(fileUrl));
+        if (fileType == null) throw new ArgumentNullException(nameof(fileType));
+
+        var formValues = new Dictionary<string, string>
         {
-            if (filename == null) throw new ArgumentNullException(nameof(filename));
-            if (fileType == null) throw new ArgumentNullException(nameof(fileType));
-            if (externalId == null) throw new ArgumentNullException(nameof(externalId));
-            if (stream == null) throw new ArgumentNullException(nameof(stream));
+            { "external_id", externalId },
+            { "file_type", fileType },
+            { "file_url", fileUrl }
+        };
 
+        HttpResponseMessage response = await _httpClient.PostAsync("attachment/register", new FormUrlEncodedContent(formValues), cancellationToken);
+        string body = await response.Content.ReadAsStringAsync();
 
-            // 1. The first step when uploading an attachment is to obtain a temporary URL to which the file can be uploaded. 
-            var formValues = new Dictionary<string, string>
-            {
-                {"file_name", filename},
-                {"file_type", fileType}
-            };
-
-            HttpResponseMessage response = await _httpClient.PostAsync("attachment/upload", new FormUrlEncodedContent(formValues), cancellationToken);
-            string body = await response.Content.ReadAsStringAsync();
-
-            if (!response.IsSuccessStatusCode)
-            {
-                throw MonzoException.CreateFromApiResponse(response, body);
-            }
-
-            // 2. Once you have obtained a URL for an attachment upload to the upload_url
-            var uploadAttachmentResponse = JsonConvert.DeserializeObject<UploadAttachmentResponse>(body);
-
-            using (var uploadClient = new HttpClient())
-            {
-                var streamContent = new StreamContent(stream);
-                streamContent.Headers.ContentType = new MediaTypeHeaderValue(fileType);
-
-                var streamUploadResponse = await uploadClient.PutAsync(uploadAttachmentResponse.UploadUrl, streamContent, cancellationToken);
-
-                if (!streamUploadResponse.IsSuccessStatusCode)
-                {
-                    var errorMessage = await streamUploadResponse.Content.ReadAsStringAsync();
-                    throw new MonzoException(streamUploadResponse.StatusCode, $"Error uploading file: {errorMessage}");
-                }
-            }
-
-            // 3. Finally this URL can then be registered against a transaction
-            return await CreateAttachmentAsync(externalId, uploadAttachmentResponse.FileUrl, fileType, cancellationToken);
+        if (!response.IsSuccessStatusCode)
+        {
+            throw MonzoException.CreateFromApiResponse(response, body);
         }
 
-        /// <summary>
-        /// To remove an attachment, simply deregister this using its id
-        /// </summary>
-        /// <param name="id">The id of the attachment to deregister.</param>
-        /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
-        public async Task DeleteAttachmentAsync(string id, CancellationToken cancellationToken = default(CancellationToken))
+        return JsonConvert.DeserializeObject<RegisterAttachmentResponse>(body).Attachment;
+    }
+
+    /// <summary>
+    /// Uploads an attachment from a file stream.
+    /// </summary>
+    /// <param name="filename">The name of the file to be uploaded</param>
+    /// <param name="fileType">The content type of the file</param>
+    /// <param name="externalId">The id of the transaction to associate the attachment with.</param>
+    /// <param name="stream">The file stream.</param>
+    /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
+    public async Task<Attachment> UploadAttachmentAsync(string filename, string fileType, string externalId, Stream stream,
+        CancellationToken cancellationToken = default(CancellationToken))
+    {
+        if (filename == null) throw new ArgumentNullException(nameof(filename));
+        if (fileType == null) throw new ArgumentNullException(nameof(fileType));
+        if (externalId == null) throw new ArgumentNullException(nameof(externalId));
+        if (stream == null) throw new ArgumentNullException(nameof(stream));
+
+
+        // 1. The first step when uploading an attachment is to obtain a temporary URL to which the file can be uploaded.
+        var formValues = new Dictionary<string, string>
         {
-            if (id == null) throw new ArgumentNullException(nameof(id));
+            { "file_name", filename },
+            { "file_type", fileType }
+        };
 
-            var formValues = new Dictionary<string, string>
+        HttpResponseMessage response = await _httpClient.PostAsync("attachment/upload", new FormUrlEncodedContent(formValues), cancellationToken);
+        string body = await response.Content.ReadAsStringAsync();
+
+        if (!response.IsSuccessStatusCode)
+        {
+            throw MonzoException.CreateFromApiResponse(response, body);
+        }
+
+        // 2. Once you have obtained a URL for an attachment upload to the upload_url
+        var uploadAttachmentResponse = JsonConvert.DeserializeObject<UploadAttachmentResponse>(body);
+
+        using (var uploadClient = new HttpClient())
+        {
+            var streamContent = new StreamContent(stream);
+            streamContent.Headers.ContentType = new MediaTypeHeaderValue(fileType);
+
+            var streamUploadResponse = await uploadClient.PutAsync(uploadAttachmentResponse.UploadUrl, streamContent, cancellationToken);
+
+            if (!streamUploadResponse.IsSuccessStatusCode)
             {
-                {"id", id}
-            };
-
-            HttpResponseMessage response = await _httpClient.PostAsync("attachment/deregister", new FormUrlEncodedContent(formValues), cancellationToken);
-            string body = await response.Content.ReadAsStringAsync();
-
-            if (!response.IsSuccessStatusCode)
-            {
-                throw MonzoException.CreateFromApiResponse(response, body);
+                var errorMessage = await streamUploadResponse.Content.ReadAsStringAsync();
+                throw new MonzoException(streamUploadResponse.StatusCode, $"Error uploading file: {errorMessage}");
             }
         }
 
-        /// <summary>
-        /// Returns a list of pots owned by the currently authorised user.
-        /// </summary>
-        /// <param name="currentAccountId">The ID of the current account you wish to retrieve the pots from</param>
-        public async Task<IList<Pot>> GetPotsAsync(string currentAccountId)
+        // 3. Finally this URL can then be registered against a transaction
+        return await CreateAttachmentAsync(externalId, uploadAttachmentResponse.FileUrl, fileType, cancellationToken);
+    }
+
+    /// <summary>
+    /// To remove an attachment, simply deregister this using its id
+    /// </summary>
+    /// <param name="id">The id of the attachment to deregister.</param>
+    /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
+    public async Task DeleteAttachmentAsync(string id, CancellationToken cancellationToken = default(CancellationToken))
+    {
+        if (id == null) throw new ArgumentNullException(nameof(id));
+
+        var formValues = new Dictionary<string, string>
         {
-            if (currentAccountId == null) throw new ArgumentNullException(nameof(currentAccountId));
+            { "id", id }
+        };
 
-            HttpResponseMessage response = await _httpClient.GetAsync($"pots?current_account_id={currentAccountId}");
-            string body = await response.Content.ReadAsStringAsync();
+        HttpResponseMessage response = await _httpClient.PostAsync("attachment/deregister", new FormUrlEncodedContent(formValues), cancellationToken);
+        string body = await response.Content.ReadAsStringAsync();
 
-            if (!response.IsSuccessStatusCode)
-            {
-                throw MonzoException.CreateFromApiResponse(response, body);
-            }
+        if (!response.IsSuccessStatusCode)
+        {
+            throw MonzoException.CreateFromApiResponse(response, body);
+        }
+    }
 
-            return JsonConvert.DeserializeObject<ListPotsResponse>(body).Pots;
+    /// <summary>
+    /// Returns a list of pots owned by the currently authorised user.
+    /// </summary>
+    /// <param name="currentAccountId">The ID of the current account you wish to retrieve the pots from</param>
+    public async Task<IList<Pot>> GetPotsAsync(string currentAccountId)
+    {
+        if (currentAccountId == null) throw new ArgumentNullException(nameof(currentAccountId));
+
+        HttpResponseMessage response = await _httpClient.GetAsync($"pots?current_account_id={currentAccountId}");
+        string body = await response.Content.ReadAsStringAsync();
+
+        if (!response.IsSuccessStatusCode)
+        {
+            throw MonzoException.CreateFromApiResponse(response, body);
         }
 
-        //// <summary>
-        /// Move money from an account owned by the currently authorised user into one of their pots.
-        /// </summary>
-        /// <param name="potId">The id of the pot to deposit into.</param>
-        /// <param name="sourceAccountId">The id of the account to withdraw from.</param>
-        /// <param name="amount">The amount to deposit, as a 64bit integer in minor units of the currency, eg. pennies for GBP, or cents for EUR and USD.</param>
-        /// <param name="dedupeId">A unique string used to de-duplicate deposits. Ensure this remains static between retries to ensure only one deposit is created.</param>
-        /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
-        /// <returns>Updated information about the pot deposited into</returns>
-        public async Task<Pot> DepositIntoPotAsync(string potId, string sourceAccountId, long amount, string dedupeId, CancellationToken cancellationToken = default(CancellationToken))
+        return JsonConvert.DeserializeObject<ListPotsResponse>(body).Pots;
+    }
+
+    /// <summary>
+    /// Move money from an account owned by the currently authorised user into one of their pots.
+    /// </summary>
+    /// <param name="potId">The id of the pot to deposit into.</param>
+    /// <param name="sourceAccountId">The id of the account to withdraw from.</param>
+    /// <param name="amount">The amount to deposit, as a 64bit integer in minor units of the currency, eg. pennies for GBP, or cents for EUR and USD.</param>
+    /// <param name="dedupeId">A unique string used to de-duplicate deposits. Ensure this remains static between retries to ensure only one deposit is created.</param>
+    /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
+    /// <returns>Updated information about the pot deposited into</returns>
+    public async Task<Pot> DepositIntoPotAsync(string potId, string sourceAccountId, long amount, string dedupeId,
+        CancellationToken cancellationToken = default(CancellationToken))
+    {
+        if (string.IsNullOrWhiteSpace(potId)) throw new ArgumentNullException(nameof(potId));
+
+        var formValues = new Dictionary<string, string>
         {
-            if (string.IsNullOrWhiteSpace(potId)) throw new ArgumentNullException(nameof(potId));
+            { "source_account_id", sourceAccountId },
+            { "amount", amount.ToString() },
+            { "dedupe_id", dedupeId }
+        };
 
-            var formValues = new Dictionary<string, string>
-            {
-                {"source_account_id", sourceAccountId},
-                {"amount", amount.ToString()},
-                {"dedupe_id", dedupeId}
-            };
+        HttpResponseMessage response = await _httpClient.PutAsync($"pots/{potId}/deposit", new FormUrlEncodedContent(formValues), cancellationToken);
+        string body = await response.Content.ReadAsStringAsync();
 
-            HttpResponseMessage response = await _httpClient.PutAsync($"pots/{potId}/deposit", new FormUrlEncodedContent(formValues), cancellationToken);
-            string body = await response.Content.ReadAsStringAsync();
-
-            if (!response.IsSuccessStatusCode)
-            {
-                throw MonzoException.CreateFromApiResponse(response, body);
-            }
-
-            return JsonConvert.DeserializeObject<Pot>(body);
+        if (!response.IsSuccessStatusCode)
+        {
+            throw MonzoException.CreateFromApiResponse(response, body);
         }
 
-        /// <summary>
-        /// Move money from a pot owned by the currently authorised user into one of their accounts.
-        /// </summary>
-        /// <param name="potId">The id of the pot to deposit into.</param>
-        /// <param name="destinationAccountId">The id of the account to deposit into.</param>
-        /// <param name="amount">The amount to deposit, as a 64bit integer in minor units of the currency, eg. pennies for GBP, or cents for EUR and USD.</param>
-        /// <param name="dedupeId">A unique string used to de-duplicate deposits. Ensure this remains static between retries to ensure only one withdrawal is created.</param>
-        /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
-        /// <returns>Updated information about the pot withdrawn from</returns>
-        public async Task<Pot> WithdrawFromPotAsync(string potId, string destinationAccountId, long amount, string dedupeId, CancellationToken cancellationToken = default(CancellationToken))
+        return JsonConvert.DeserializeObject<Pot>(body);
+    }
+
+    /// <summary>
+    /// Move money from a pot owned by the currently authorised user into one of their accounts.
+    /// </summary>
+    /// <param name="potId">The id of the pot to deposit into.</param>
+    /// <param name="destinationAccountId">The id of the account to deposit into.</param>
+    /// <param name="amount">The amount to deposit, as a 64bit integer in minor units of the currency, eg. pennies for GBP, or cents for EUR and USD.</param>
+    /// <param name="dedupeId">A unique string used to de-duplicate deposits. Ensure this remains static between retries to ensure only one withdrawal is created.</param>
+    /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
+    /// <returns>Updated information about the pot withdrawn from</returns>
+    public async Task<Pot> WithdrawFromPotAsync(string potId, string destinationAccountId, long amount, string dedupeId,
+        CancellationToken cancellationToken = default(CancellationToken))
+    {
+        if (string.IsNullOrWhiteSpace(potId)) throw new ArgumentNullException(nameof(potId));
+
+        var formValues = new Dictionary<string, string>
         {
-            if (string.IsNullOrWhiteSpace(potId)) throw new ArgumentNullException(nameof(potId));
+            { "destination_account_id", destinationAccountId },
+            { "amount", amount.ToString() },
+            { "dedupe_id", dedupeId }
+        };
 
-            var formValues = new Dictionary<string, string>
-            {
-                {"destination_account_id", destinationAccountId},
-                {"amount", amount.ToString()},
-                {"dedupe_id", dedupeId}
-            };
+        HttpResponseMessage response = await _httpClient.PutAsync($"pots/{potId}/withdraw", new FormUrlEncodedContent(formValues), cancellationToken);
+        string body = await response.Content.ReadAsStringAsync();
 
-            HttpResponseMessage response = await _httpClient.PutAsync($"pots/{potId}/withdraw", new FormUrlEncodedContent(formValues), cancellationToken);
-            string body = await response.Content.ReadAsStringAsync();
-
-            if (!response.IsSuccessStatusCode)
-            {
-                throw MonzoException.CreateFromApiResponse(response, body);
-            }
-
-            return JsonConvert.DeserializeObject<Pot>(body);
+        if (!response.IsSuccessStatusCode)
+        {
+            throw MonzoException.CreateFromApiResponse(response, body);
         }
 
-        /// <summary>
-        /// Disposes the underlying HttpClient.
-        /// </summary>
-        public void Dispose()
-        {
-            _httpClient.Dispose();
-        }
+        return JsonConvert.DeserializeObject<Pot>(body);
+    }
+
+    /// <summary>
+    /// Disposes the underlying HttpClient.
+    /// </summary>
+    public void Dispose()
+    {
+        _httpClient.Dispose();
     }
 }

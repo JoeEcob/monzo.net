@@ -1,10 +1,9 @@
 using Newtonsoft.Json;
 
-namespace Monzo.Messages
+namespace Monzo.Messages;
+
+internal sealed class AnnotateTransactionResponse
 {
-    internal sealed class AnnotateTransactionResponse
-    {
-        [JsonProperty("transaction")]
-        public Transaction Transaction { get; set; }
-    }
+    [JsonProperty("transaction")]
+    public Transaction Transaction { get; set; }
 }

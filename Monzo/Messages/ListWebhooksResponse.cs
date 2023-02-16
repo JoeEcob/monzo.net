@@ -1,11 +1,10 @@
 using System.Collections.Generic;
 using Newtonsoft.Json;
 
-namespace Monzo.Messages
+namespace Monzo.Messages;
+
+internal sealed class ListWebhooksResponse
 {
-    internal sealed class ListWebhooksResponse
-    {
-        [JsonProperty("webhooks")]
-        public IList<Webhook> Webhooks { get; set; }
-    }
+    [JsonProperty("webhooks")]
+    public IList<Webhook> Webhooks { get; set; }
 }
