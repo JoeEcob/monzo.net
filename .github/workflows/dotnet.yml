@@ -2,9 +2,9 @@ name: .NET
 
 on:
   push:
-    branches: [ dev ]
+    branches: [ main ]
   pull_request:
-    branches: [ dev ]
+    branches: [ main ]
 
 jobs:
   build:
@@ -22,7 +22,7 @@ jobs:
     - name: Test
       run: dotnet test --no-build --verbosity normal
   deploy:
-    if: contains(github.ref, 'dev')
+    if: contains(github.ref, 'main')
     runs-on: ubuntu-latest
     needs: build
     steps:
