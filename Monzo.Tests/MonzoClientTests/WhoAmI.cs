@@ -2,6 +2,7 @@
 {
     using Monzo.Tests.Fakes;
     using NUnit.Framework;
+    using NUnit.Framework.Legacy;
     using System.Net;
     using System.Threading.Tasks;
 
@@ -23,14 +24,14 @@
             {
                 var response = await client.WhoAmIAsync();
 
-                Assert.AreEqual(true, response.Authenticated);
-                Assert.AreEqual("oauth_abc123", response.ClientId);
-                Assert.AreEqual("user_00009238aMBIIrS5Rdncq9", response.UserId);
+                ClassicAssert.AreEqual(true, response.Authenticated);
+                ClassicAssert.AreEqual("oauth_abc123", response.ClientId);
+                ClassicAssert.AreEqual("user_00009238aMBIIrS5Rdncq9", response.UserId);
             }
 
-            Assert.AreEqual("/ping/whoami", fakeMessageHandler.Request.RequestUri.PathAndQuery);
+            ClassicAssert.AreEqual("/ping/whoami", fakeMessageHandler.Request.RequestUri.PathAndQuery);
 
-            Assert.AreEqual("Bearer testAccessToken", fakeMessageHandler.Request.Headers.Authorization.ToString());
+            ClassicAssert.AreEqual("Bearer testAccessToken", fakeMessageHandler.Request.Headers.Authorization.ToString());
         }
     }
 }

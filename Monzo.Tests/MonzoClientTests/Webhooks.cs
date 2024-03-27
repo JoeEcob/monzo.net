@@ -2,6 +2,7 @@
 {
     using Monzo.Tests.Fakes;
     using NUnit.Framework;
+    using NUnit.Framework.Legacy;
     using System.Net;
     using System.Threading.Tasks;
 
@@ -24,18 +25,18 @@
             {
                 var webhook = await client.CreateWebhookAsync("1", "http://example.com");
 
-                Assert.AreEqual("account_id", webhook.AccountId);
-                Assert.AreEqual("webhook_id", webhook.Id);
-                Assert.AreEqual("http://example.com", webhook.Url);
+                ClassicAssert.AreEqual("account_id", webhook.AccountId);
+                ClassicAssert.AreEqual("webhook_id", webhook.Id);
+                ClassicAssert.AreEqual("http://example.com", webhook.Url);
             }
 
-            Assert.AreEqual("Bearer testAccessToken", fakeMessageHandler.Request.Headers.Authorization.ToString());
-            Assert.AreEqual("POST", fakeMessageHandler.Request.Method.ToString());
-            Assert.AreEqual("/webhooks", fakeMessageHandler.Request.RequestUri.PathAndQuery);
+            ClassicAssert.AreEqual("Bearer testAccessToken", fakeMessageHandler.Request.Headers.Authorization.ToString());
+            ClassicAssert.AreEqual("POST", fakeMessageHandler.Request.Method.ToString());
+            ClassicAssert.AreEqual("/webhooks", fakeMessageHandler.Request.RequestUri.PathAndQuery);
 
             var formCollection = await fakeMessageHandler.GetQueryStringAsync();
-            Assert.AreEqual("1", formCollection["account_id"]);
-            Assert.AreEqual("http://example.com", formCollection["url"]);
+            ClassicAssert.AreEqual("1", formCollection["account_id"]);
+            ClassicAssert.AreEqual("http://example.com", formCollection["url"]);
         }
 
         [Test]
@@ -56,15 +57,15 @@
             {
                 var webhooks = await client.GetWebhooksAsync("1");
 
-                Assert.AreEqual(1, webhooks.Count);
-                Assert.AreEqual("webhook_000091yhhOmrXQaVZ1Irsv", webhooks[0].Id);
-                Assert.AreEqual("acc_000091yf79yMwNaZHhHGzp", webhooks[0].AccountId);
-                Assert.AreEqual("http://example.com/callback", webhooks[0].Url);
+                ClassicAssert.AreEqual(1, webhooks.Count);
+                ClassicAssert.AreEqual("webhook_000091yhhOmrXQaVZ1Irsv", webhooks[0].Id);
+                ClassicAssert.AreEqual("acc_000091yf79yMwNaZHhHGzp", webhooks[0].AccountId);
+                ClassicAssert.AreEqual("http://example.com/callback", webhooks[0].Url);
             }
 
-            Assert.AreEqual("/webhooks?account_id=1", fakeMessageHandler.Request.RequestUri.PathAndQuery);
+            ClassicAssert.AreEqual("/webhooks?account_id=1", fakeMessageHandler.Request.RequestUri.PathAndQuery);
 
-            Assert.AreEqual("Bearer testAccessToken", fakeMessageHandler.Request.Headers.Authorization.ToString());
+            ClassicAssert.AreEqual("Bearer testAccessToken", fakeMessageHandler.Request.Headers.Authorization.ToString());
         }
 
         [Test]
@@ -77,10 +78,10 @@
                 await client.DeleteWebhookAsync("1");
             }
 
-            Assert.AreEqual("/webhooks/1", fakeMessageHandler.Request.RequestUri.PathAndQuery);
-            Assert.AreEqual("DELETE", fakeMessageHandler.Request.Method.ToString());
+            ClassicAssert.AreEqual("/webhooks/1", fakeMessageHandler.Request.RequestUri.PathAndQuery);
+            ClassicAssert.AreEqual("DELETE", fakeMessageHandler.Request.Method.ToString());
 
-            Assert.AreEqual("Bearer testAccessToken", fakeMessageHandler.Request.Headers.Authorization.ToString());
+            ClassicAssert.AreEqual("Bearer testAccessToken", fakeMessageHandler.Request.Headers.Authorization.ToString());
         }
     }
 }
