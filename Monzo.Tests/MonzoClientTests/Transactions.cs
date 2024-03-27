@@ -7,6 +7,7 @@
     using System.Threading.Tasks;
     using Monzo.Tests.Fakes;
     using NUnit.Framework;
+    using NUnit.Framework.Legacy;
 
     [TestFixture]
     public sealed class Transactions
@@ -53,24 +54,24 @@
             {
                 var transactions = await client.GetTransactionsAsync("1");
 
-                Assert.AreEqual(2, transactions.Count);
+                ClassicAssert.AreEqual(2, transactions.Count);
 
-                Assert.AreEqual(13013, transactions[0].AccountBalance);
-                Assert.AreEqual(-510, transactions[0].Amount);
-                Assert.AreEqual(new DateTime(2015, 08, 22, 12, 20, 18, DateTimeKind.Utc), transactions[0].Created);
-                Assert.AreEqual("GBP", transactions[0].Currency);
-                Assert.AreEqual("THE DE BEAUVOIR DELI C LONDON        GBR", transactions[0].Description);
-                Assert.AreEqual("tx_00008zIcpb1TB4yeIFXMzx", transactions[0].Id);
-                Assert.AreEqual("merch_00008zIcpbAKe8shBxXUtl", transactions[0].Merchant.Id);
-                Assert.AreEqual(new Dictionary<string, string>(), transactions[0].Metadata);
-                Assert.AreEqual("Salmon sandwich 🍞", transactions[0].Notes);
-                Assert.IsFalse(transactions[0].IsLoad);
-                Assert.AreEqual("eating_out", transactions[0].Category);
+                ClassicAssert.AreEqual(13013, transactions[0].AccountBalance);
+                ClassicAssert.AreEqual(-510, transactions[0].Amount);
+                ClassicAssert.AreEqual(new DateTime(2015, 08, 22, 12, 20, 18, DateTimeKind.Utc), transactions[0].Created);
+                ClassicAssert.AreEqual("GBP", transactions[0].Currency);
+                ClassicAssert.AreEqual("THE DE BEAUVOIR DELI C LONDON        GBR", transactions[0].Description);
+                ClassicAssert.AreEqual("tx_00008zIcpb1TB4yeIFXMzx", transactions[0].Id);
+                ClassicAssert.AreEqual("merch_00008zIcpbAKe8shBxXUtl", transactions[0].Merchant.Id);
+                ClassicAssert.AreEqual(new Dictionary<string, string>(), transactions[0].Metadata);
+                ClassicAssert.AreEqual("Salmon sandwich 🍞", transactions[0].Notes);
+                ClassicAssert.IsFalse(transactions[0].IsLoad);
+                ClassicAssert.AreEqual("eating_out", transactions[0].Category);
             }
 
-            Assert.AreEqual("/transactions?account_id=1", fakeMessageHandler.Request.RequestUri.PathAndQuery);
+            ClassicAssert.AreEqual("/transactions?account_id=1", fakeMessageHandler.Request.RequestUri.PathAndQuery);
 
-            Assert.AreEqual("Bearer testAccessToken", fakeMessageHandler.Request.Headers.Authorization.ToString());
+            ClassicAssert.AreEqual("Bearer testAccessToken", fakeMessageHandler.Request.Headers.Authorization.ToString());
         }
 
         [Test]
@@ -114,24 +115,24 @@
             {
                 var transactions = await client.GetTransactionsAsync("1", null, new PaginationOptions { SinceTime = new DateTime(2015, 4, 5, 18, 1, 32, DateTimeKind.Utc), Limit = 40, BeforeTime = new DateTime(2015, 12, 25, 18, 1, 32, DateTimeKind.Utc) });
 
-                Assert.AreEqual(2, transactions.Count);
+                ClassicAssert.AreEqual(2, transactions.Count);
 
-                Assert.AreEqual(13013, transactions[0].AccountBalance);
-                Assert.AreEqual(-510, transactions[0].Amount);
-                Assert.AreEqual(new DateTime(2015, 08, 22, 12, 20, 18, DateTimeKind.Utc), transactions[0].Created);
-                Assert.AreEqual("GBP", transactions[0].Currency);
-                Assert.AreEqual("THE DE BEAUVOIR DELI C LONDON        GBR", transactions[0].Description);
-                Assert.AreEqual("tx_00008zIcpb1TB4yeIFXMzx", transactions[0].Id);
-                Assert.AreEqual("merch_00008zIcpbAKe8shBxXUtl", transactions[0].Merchant.Id);
-                Assert.AreEqual(new Dictionary<string, string>(), transactions[0].Metadata);
-                Assert.AreEqual("Salmon sandwich 🍞", transactions[0].Notes);
-                Assert.IsFalse(transactions[0].IsLoad);
-                Assert.AreEqual("eating_out", transactions[0].Category);
+                ClassicAssert.AreEqual(13013, transactions[0].AccountBalance);
+                ClassicAssert.AreEqual(-510, transactions[0].Amount);
+                ClassicAssert.AreEqual(new DateTime(2015, 08, 22, 12, 20, 18, DateTimeKind.Utc), transactions[0].Created);
+                ClassicAssert.AreEqual("GBP", transactions[0].Currency);
+                ClassicAssert.AreEqual("THE DE BEAUVOIR DELI C LONDON        GBR", transactions[0].Description);
+                ClassicAssert.AreEqual("tx_00008zIcpb1TB4yeIFXMzx", transactions[0].Id);
+                ClassicAssert.AreEqual("merch_00008zIcpbAKe8shBxXUtl", transactions[0].Merchant.Id);
+                ClassicAssert.AreEqual(new Dictionary<string, string>(), transactions[0].Metadata);
+                ClassicAssert.AreEqual("Salmon sandwich 🍞", transactions[0].Notes);
+                ClassicAssert.IsFalse(transactions[0].IsLoad);
+                ClassicAssert.AreEqual("eating_out", transactions[0].Category);
             }
 
-            Assert.AreEqual("/transactions?account_id=1&limit=40&since=2015-04-05T18:01:32Z&before=2015-12-25T18:01:32Z", fakeMessageHandler.Request.RequestUri.PathAndQuery);
+            ClassicAssert.AreEqual("/transactions?account_id=1&limit=40&since=2015-04-05T18:01:32Z&before=2015-12-25T18:01:32Z", fakeMessageHandler.Request.RequestUri.PathAndQuery);
 
-            Assert.AreEqual("Bearer testAccessToken", fakeMessageHandler.Request.Headers.Authorization.ToString());
+            ClassicAssert.AreEqual("Bearer testAccessToken", fakeMessageHandler.Request.Headers.Authorization.ToString());
         }
 
         [Test]
@@ -158,23 +159,23 @@
             {
                 var transaction = await client.GetTransactionAsync("1");
 
-                Assert.AreEqual(13013, transaction.AccountBalance);
-                Assert.AreEqual(-510, transaction.Amount);
-                Assert.AreEqual(new DateTime(2015, 8, 22, 12, 20, 18, DateTimeKind.Utc), transaction.Created);
-                Assert.AreEqual("GBP", transaction.Currency);
-                Assert.AreEqual("THE DE BEAUVOIR DELI C LONDON        GBR", transaction.Description);
-                Assert.AreEqual("tx_00008zIcpb1TB4yeIFXMzx", transaction.Id);
-                Assert.AreEqual(new Dictionary<string, string>(), transaction.Metadata);
-                Assert.AreEqual("Salmon sandwich 🍞", transaction.Notes);
-                Assert.IsFalse(transaction.IsLoad);
+                ClassicAssert.AreEqual(13013, transaction.AccountBalance);
+                ClassicAssert.AreEqual(-510, transaction.Amount);
+                ClassicAssert.AreEqual(new DateTime(2015, 8, 22, 12, 20, 18, DateTimeKind.Utc), transaction.Created);
+                ClassicAssert.AreEqual("GBP", transaction.Currency);
+                ClassicAssert.AreEqual("THE DE BEAUVOIR DELI C LONDON        GBR", transaction.Description);
+                ClassicAssert.AreEqual("tx_00008zIcpb1TB4yeIFXMzx", transaction.Id);
+                ClassicAssert.AreEqual(new Dictionary<string, string>(), transaction.Metadata);
+                ClassicAssert.AreEqual("Salmon sandwich 🍞", transaction.Notes);
+                ClassicAssert.IsFalse(transaction.IsLoad);
 
-                Assert.AreEqual("merch_00008zIcpbAKe8shBxXUtl", transaction.Merchant.Id);
+                ClassicAssert.AreEqual("merch_00008zIcpbAKe8shBxXUtl", transaction.Merchant.Id);
             }
 
 
-            Assert.AreEqual("/transactions/1", fakeMessageHandler.Request.RequestUri.PathAndQuery);
+            ClassicAssert.AreEqual("/transactions/1", fakeMessageHandler.Request.RequestUri.PathAndQuery);
 
-            Assert.AreEqual("Bearer testAccessToken", fakeMessageHandler.Request.Headers.Authorization.ToString());
+            ClassicAssert.AreEqual("Bearer testAccessToken", fakeMessageHandler.Request.Headers.Authorization.ToString());
         }
 
         [Test]
@@ -218,35 +219,35 @@
             {
                 var transaction = await client.GetTransactionAsync("1", "merchant");
 
-                Assert.AreEqual(13013, transaction.AccountBalance);
-                Assert.AreEqual(-510, transaction.Amount);
-                Assert.AreEqual(new DateTime(2015, 8, 22, 12, 20, 18, DateTimeKind.Utc), transaction.Created);
-                Assert.AreEqual("GBP", transaction.Currency);
-                Assert.AreEqual("THE DE BEAUVOIR DELI C LONDON        GBR", transaction.Description);
-                Assert.AreEqual("tx_00008zIcpb1TB4yeIFXMzx", transaction.Id);
-                Assert.AreEqual(new Dictionary<string, string>(), transaction.Metadata);
-                Assert.AreEqual("Salmon sandwich 🍞", transaction.Notes);
-                Assert.IsFalse(transaction.IsLoad);
+                ClassicAssert.AreEqual(13013, transaction.AccountBalance);
+                ClassicAssert.AreEqual(-510, transaction.Amount);
+                ClassicAssert.AreEqual(new DateTime(2015, 8, 22, 12, 20, 18, DateTimeKind.Utc), transaction.Created);
+                ClassicAssert.AreEqual("GBP", transaction.Currency);
+                ClassicAssert.AreEqual("THE DE BEAUVOIR DELI C LONDON        GBR", transaction.Description);
+                ClassicAssert.AreEqual("tx_00008zIcpb1TB4yeIFXMzx", transaction.Id);
+                ClassicAssert.AreEqual(new Dictionary<string, string>(), transaction.Metadata);
+                ClassicAssert.AreEqual("Salmon sandwich 🍞", transaction.Notes);
+                ClassicAssert.IsFalse(transaction.IsLoad);
 
-                Assert.AreEqual("98 Southgate Road", transaction.Merchant.Address.Address);
-                Assert.AreEqual("London", transaction.Merchant.Address.City);
-                Assert.AreEqual(51.54151, transaction.Merchant.Address.Latitude);
-                Assert.AreEqual(-0.08482400000002599, transaction.Merchant.Address.Longitude);
-                Assert.AreEqual("N1 3JD", transaction.Merchant.Address.Postcode);
-                Assert.AreEqual("Greater London", transaction.Merchant.Address.Region);
+                ClassicAssert.AreEqual("98 Southgate Road", transaction.Merchant.Address.Address);
+                ClassicAssert.AreEqual("London", transaction.Merchant.Address.City);
+                ClassicAssert.AreEqual(51.54151, transaction.Merchant.Address.Latitude);
+                ClassicAssert.AreEqual(-0.08482400000002599, transaction.Merchant.Address.Longitude);
+                ClassicAssert.AreEqual("N1 3JD", transaction.Merchant.Address.Postcode);
+                ClassicAssert.AreEqual("Greater London", transaction.Merchant.Address.Region);
 
-                Assert.AreEqual(new DateTime(2015, 8, 22, 12, 20, 18, DateTimeKind.Utc), transaction.Merchant.Created);
-                Assert.AreEqual("grp_00008zIcpbBOaAr7TTP3sv", transaction.Merchant.GroupId);
-                Assert.AreEqual("merch_00008zIcpbAKe8shBxXUtl", transaction.Merchant.Id);
-                Assert.AreEqual("https://pbs.twimg.com/profile_images/527043602623389696/68_SgUWJ.jpeg", transaction.Merchant.Logo);
-                Assert.AreEqual("🍞", transaction.Merchant.Emoji);
-                Assert.AreEqual("The De Beauvoir Deli Co.", transaction.Merchant.Name);
-                Assert.AreEqual("eating_out", transaction.Merchant.Category);
+                ClassicAssert.AreEqual(new DateTime(2015, 8, 22, 12, 20, 18, DateTimeKind.Utc), transaction.Merchant.Created);
+                ClassicAssert.AreEqual("grp_00008zIcpbBOaAr7TTP3sv", transaction.Merchant.GroupId);
+                ClassicAssert.AreEqual("merch_00008zIcpbAKe8shBxXUtl", transaction.Merchant.Id);
+                ClassicAssert.AreEqual("https://pbs.twimg.com/profile_images/527043602623389696/68_SgUWJ.jpeg", transaction.Merchant.Logo);
+                ClassicAssert.AreEqual("🍞", transaction.Merchant.Emoji);
+                ClassicAssert.AreEqual("The De Beauvoir Deli Co.", transaction.Merchant.Name);
+                ClassicAssert.AreEqual("eating_out", transaction.Merchant.Category);
             }
 
-            Assert.AreEqual("/transactions/1?expand[]=merchant", fakeMessageHandler.Request.RequestUri.PathAndQuery);
+            ClassicAssert.AreEqual("/transactions/1?expand[]=merchant", fakeMessageHandler.Request.RequestUri.PathAndQuery);
 
-            Assert.AreEqual("Bearer testAccessToken", fakeMessageHandler.Request.Headers.Authorization.ToString());
+            ClassicAssert.AreEqual("Bearer testAccessToken", fakeMessageHandler.Request.Headers.Authorization.ToString());
         }
 
         [Test]
@@ -299,19 +300,19 @@
             {
                 var transaction = await client.GetTransactionAsync("1", "merchant");
 
-                Assert.AreEqual(10000, transaction.Amount);
-                Assert.AreEqual("general", transaction.Category);
-                Assert.AreEqual(false, transaction.IncludeInSpending);
-                Assert.AreEqual(false, transaction.IsLoad);
-                Assert.AreEqual("12345678", transaction.CounterParty.AccountNumber);
-                Assert.AreEqual("Paddington Bear", transaction.CounterParty.Name);
-                Assert.AreEqual("040004", transaction.CounterParty.SortCode);
-                Assert.AreEqual("anonuser_0000000000000000000001", transaction.CounterParty.UserId);
+                ClassicAssert.AreEqual(10000, transaction.Amount);
+                ClassicAssert.AreEqual("general", transaction.Category);
+                ClassicAssert.AreEqual(false, transaction.IncludeInSpending);
+                ClassicAssert.AreEqual(false, transaction.IsLoad);
+                ClassicAssert.AreEqual("12345678", transaction.CounterParty.AccountNumber);
+                ClassicAssert.AreEqual("Paddington Bear", transaction.CounterParty.Name);
+                ClassicAssert.AreEqual("040004", transaction.CounterParty.SortCode);
+                ClassicAssert.AreEqual("anonuser_0000000000000000000001", transaction.CounterParty.UserId);
             }
 
-            Assert.AreEqual("/transactions/1?expand[]=merchant", fakeMessageHandler.Request.RequestUri.PathAndQuery);
+            ClassicAssert.AreEqual("/transactions/1?expand[]=merchant", fakeMessageHandler.Request.RequestUri.PathAndQuery);
 
-            Assert.AreEqual("Bearer testAccessToken", fakeMessageHandler.Request.Headers.Authorization.ToString());
+            ClassicAssert.AreEqual("Bearer testAccessToken", fakeMessageHandler.Request.Headers.Authorization.ToString());
         }
 
         [Test]
@@ -341,18 +342,18 @@
             {
                 var transaction = await client.AnnotateTransactionAsync("1", new Dictionary<string, string> { { "key1", "value1" }, { "key2", "" } });
 
-                Assert.AreEqual("foo", transaction.Metadata.First().Key);
-                Assert.AreEqual("bar", transaction.Metadata.First().Value);
+                ClassicAssert.AreEqual("foo", transaction.Metadata.First().Key);
+                ClassicAssert.AreEqual("bar", transaction.Metadata.First().Value);
             }
 
-            Assert.AreEqual("Bearer testAccessToken", fakeMessageHandler.Request.Headers.Authorization.ToString());
-            Assert.AreEqual("PATCH", fakeMessageHandler.Request.Method.ToString());
-            Assert.AreEqual("/transactions/1", fakeMessageHandler.Request.RequestUri.PathAndQuery);
+            ClassicAssert.AreEqual("Bearer testAccessToken", fakeMessageHandler.Request.Headers.Authorization.ToString());
+            ClassicAssert.AreEqual("PATCH", fakeMessageHandler.Request.Method.ToString());
+            ClassicAssert.AreEqual("/transactions/1", fakeMessageHandler.Request.RequestUri.PathAndQuery);
 
             var formCollection = await fakeMessageHandler.GetQueryStringAsync();
 
-            Assert.AreEqual("value1", formCollection["metadata[key1]"]);
-            Assert.AreEqual("", formCollection["metadata[key2]"]);
+            ClassicAssert.AreEqual("value1", formCollection["metadata[key1]"]);
+            ClassicAssert.AreEqual("", formCollection["metadata[key2]"]);
         }
     }
 }

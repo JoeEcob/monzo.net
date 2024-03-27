@@ -2,6 +2,7 @@
 {
     using Monzo.Tests.Fakes;
     using NUnit.Framework;
+    using NUnit.Framework.Legacy;
     using System.Net;
     using System.Threading.Tasks;
 
@@ -22,14 +23,14 @@
             {
                 var balance = await client.GetBalanceAsync("1");
 
-                Assert.AreEqual(5000, balance.Value);
-                Assert.AreEqual("GBP", balance.Currency);
-                Assert.AreEqual(-100, balance.SpendToday);
+                ClassicAssert.AreEqual(5000, balance.Value);
+                ClassicAssert.AreEqual("GBP", balance.Currency);
+                ClassicAssert.AreEqual(-100, balance.SpendToday);
             }
 
-            Assert.AreEqual("/balance?account_id=1", fakeMessageHandler.Request.RequestUri.PathAndQuery);
+            ClassicAssert.AreEqual("/balance?account_id=1", fakeMessageHandler.Request.RequestUri.PathAndQuery);
 
-            Assert.AreEqual("Bearer testAccessToken", fakeMessageHandler.Request.Headers.Authorization.ToString());
+            ClassicAssert.AreEqual("Bearer testAccessToken", fakeMessageHandler.Request.Headers.Authorization.ToString());
         }
     }
 }
